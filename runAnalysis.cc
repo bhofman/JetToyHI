@@ -19,7 +19,7 @@
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
 #include "include/Angularity.hh"
-#include "include/csSubtractor.hh"
+#include "include/csSubtractorFullEvent.hh"
 
 using namespace std;
 using namespace fastjet;
@@ -140,23 +140,30 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);
+    //csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);
+    //csSub.setInputParticles(particlesMerged);
+    //jetCollection jetCollectionCS(csSub.doSubtraction());
+    
+    //We want to substract for full event instead:
+    csSubtractorFullEvent csSub( 0., -1, 0.005,ghostRapMax);  // No jet R and jetRapMax because full event
     csSub.setInputParticles(particlesMerged);
     jetCollection jetCollectionCS(csSub.doSubtraction());
-    
+
     //Background densities used by constituent subtraction
     std::vector<double> rho;
     std::vector<double> rhom;
-    rho.push_back(csSub.getRho());
-    rhom.push_back(csSub.getRhoM());
+    rho.push_back(csSub.getRho());    // Same for full event
+    rhom.push_back(csSub.getRhoM());  // Same for full event
 
     //match CS jets to signal jets
+    /* Not neede if using full event (?)
     jetMatcher jmCS(R);
     jmCS.setBaseJets(jetCollectionCS);
     jmCS.setTagJets(jetCollectionSig);
     jmCS.matchJets();
 
     jmCS.reorderedToTag(jetCollectionCS);
+    */
 
     //match Raw(=unsubtracted) jets to signal jets
     jetMatcher jmRaw(R);
