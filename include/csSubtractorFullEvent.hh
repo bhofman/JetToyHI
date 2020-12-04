@@ -64,7 +64,7 @@ public :
   double getRho()  const { return rho_; }
   double getRhoM() const { return rhom_; }
   
-  std::vector<fastjet::PseudoJet> doSubtraction() {
+  std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 
     if(rho_<0.) {    
       // create what we need for the background estimation
@@ -85,8 +85,10 @@ public :
       //if rho and rhom provided, use externally supplied densities
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
     }
-    
-    std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_,ghostRapMax_);
+
+    //std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_,ghostRapMax_); // this version should be not used. Use the version below.
+    std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
+   
     
     return corrected_event;
   }

@@ -19,6 +19,7 @@
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
 #include "include/Angularity.hh"
+#include "include/csSubtractor.hh"
 #include "include/csSubtractorFullEvent.hh"
 
 using namespace std;
@@ -136,19 +137,14 @@ int main (int argc, char ** argv) {
 
 
     //---------------------------------------------------------------------------
-    //   background subtraction
+    //   background subtraction Jet-by-Jet
     //---------------------------------------------------------------------------
 
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    //csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);
-    //csSub.setInputParticles(particlesMerged);
-    //jetCollection jetCollectionCS(csSub.doSubtraction());
-    
-    //We want to substract for full event instead:
-    csSubtractorFullEvent csSub( 0., -1, 0.005,ghostRapMax);  // No jet R and jetRapMax because full event
+    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);
     csSub.setInputParticles(particlesMerged);
     jetCollection jetCollectionCS(csSub.doSubtraction());
-
+    
     //Background densities used by constituent subtraction
     std::vector<double> rho;
     std::vector<double> rhom;
@@ -156,15 +152,14 @@ int main (int argc, char ** argv) {
     rhom.push_back(csSub.getRhoM());  // Same for full event
 
     //match CS jets to signal jets
-    /* Not neede if using full event (?)
+    //Not neede if using full event (?)
     jetMatcher jmCS(R);
     jmCS.setBaseJets(jetCollectionCS);
     jmCS.setTagJets(jetCollectionSig);
     jmCS.matchJets();
 
     jmCS.reorderedToTag(jetCollectionCS);
-    */
-
+    
     //match Raw(=unsubtracted) jets to signal jets
     jetMatcher jmRaw(R);
     jmRaw.setBaseJets(jetCollectionRaw);
@@ -172,6 +167,21 @@ int main (int argc, char ** argv) {
     jmRaw.matchJets();
 
     jmRaw.reorderedToTag(jetCollectionRaw);
+
+    //---------------------------------------------------------------------------
+    //   background subtraction FULL EVENT
+    //---------------------------------------------------------------------------
+
+    //We want to substract for full event instead:
+    csSubtractorFullEvent csSubFull( 0., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
+    csSubFull.setInputParticles(particlesMerged);
+    jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent()); // !@!
+
+    //Background densities used by constituent subtraction
+    //std::vector<double> rhoFull;
+    //std::vector<double> rhomFull;
+    //rhoFull.push_back(csSub.getRho());    // Same for full event
+    //rhomFull.push_back(csSub.getRhoM());  // Same for full event
     
     //---------------------------------------------------------------------------
     //   Groom the jets
@@ -195,6 +205,9 @@ int main (int argc, char ** argv) {
     trw.addCollection("eventWeight",   eventWeight);
     trw.addCollection("csRho",         rho);
     trw.addCollection("csRhom",        rhom);
+
+    //trw.addCollection("csFullRho",         rhoFull);
+    //trw.addCollection("csFullRhom",        rhomFull);
 
     trw.addPartonCollection("partons",       partons);
 
