@@ -11,11 +11,15 @@ FFLAGS = -Wall -O2
 CXXFLAGS += -std=c++11
 LDFLAGS += -std=c++11
 
-FJCONFIG = /soft/fastjet-3.3.2/../fastjet332-install/bin/fastjet-config
+FJCONFIG = /soft/fastjet-3.3.3/../fastjet333-install/bin/fastjet-config
+FJLOC = /soft/fastjet-3.3.3/../fastjet333-install
+
 INCLUDE += `$(FJCONFIG) --cxxflags`
-LIBRARIES  += `$(FJCONFIG) --libs --plugins` -lfastjetcontribfragile
-LIBRARIES += 
-INCLUDE += 
+LIBRARIES  += -L$(FJLOC)/lib -lRecursiveTools `$(FJCONFIG) --libs --plugins` -lfastjetcontribfragile
+LIBRARIES += -L/usr/lib/x86_64-linux-gnu -lgsl -lgslcblas -lm
+
+INCLUDE += -I/usr/include
+
 INCLUDE += $(LCLINCLUDE)
 
 COMMONSRC = CmdLine.cc EventMixer.cc EventSource.cc helpers.cc ParticleIDMethods.cc ParticleName.cc PU14.cc Version.cc zfstream.cc
