@@ -152,12 +152,10 @@ int main (int argc, char ** argv) {
     rhom.push_back(csSub.getRhoM());  // Same for full event
 
     //match CS jets to signal jets
-    //Not neede if using full event (?)
     jetMatcher jmCS(R);
     jmCS.setBaseJets(jetCollectionCS);
     jmCS.setTagJets(jetCollectionSig);
     jmCS.matchJets();
-
     jmCS.reorderedToTag(jetCollectionCS);
     
     //match Raw(=unsubtracted) jets to signal jets
@@ -165,7 +163,6 @@ int main (int argc, char ** argv) {
     jmRaw.setBaseJets(jetCollectionRaw);
     jmRaw.setTagJets(jetCollectionSig);
     jmRaw.matchJets();
-
     jmRaw.reorderedToTag(jetCollectionRaw);
 
     //---------------------------------------------------------------------------
@@ -175,13 +172,20 @@ int main (int argc, char ** argv) {
     //We want to substract for full event instead:
     csSubtractorFullEvent csSubFull( 0., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
     csSubFull.setInputParticles(particlesMerged);
-    jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent()); // !@!
+    jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent());
 
     //Background densities used by constituent subtraction
-    //std::vector<double> rhoFull;
-    //std::vector<double> rhomFull;
-    //rhoFull.push_back(csSub.getRho());    // Same for full event
-    //rhomFull.push_back(csSub.getRhoM());  // Same for full event
+    std::vector<double> rhoFull;
+    std::vector<double> rhomFull;
+    rhoFull.push_back(csSubFull.getRho());    // Not same for full event
+    rhomFull.push_back(csSubFull.getRhoM());  // Not same for full event
+
+    //match CS FULL jets to signal jets
+    jetMatcher jmCSFull(R);
+    jmCSFull.setBaseJets(jetCollectionCSFull);
+    jmCSFull.setTagJets(jetCollectionSig);
+    jmCSFull.matchJets();
+    jmCSFull.reorderedToTag(jetCollectionCSFull);
     
     //---------------------------------------------------------------------------
     //   Groom the jets
@@ -206,8 +210,8 @@ int main (int argc, char ** argv) {
     trw.addCollection("csRho",         rho);
     trw.addCollection("csRhom",        rhom);
 
-    //trw.addCollection("csFullRho",         rhoFull);
-    //trw.addCollection("csFullRhom",        rhomFull);
+    trw.addCollection("csFullRho",         rhoFull);
+    trw.addCollection("csFullRhom",        rhomFull);
 
     trw.addPartonCollection("partons",       partons);
 
@@ -215,6 +219,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
 
     trw.addCollection("csJet",        jetCollectionCS);
+    trw.addCollection("csFullJet",        jetCollectionCSFull);
     trw.addCollection("rawJet",       jetCollectionRaw);
     
     trw.fillTree();
