@@ -24,7 +24,7 @@
 using namespace std;
 using namespace fastjet;
 
-// ./runConstituentSubtraction -hard samples/PythiaEventsTune14PtHat120.pu14 -pileup samples/ThermalEventsMult12000PtAv0.70.pu14 -nev 10
+// ./runAnalysis -hard samples/PythiaEventsTune14PtHat120.pu14 -pileup samples/ThermalEventsMult12000PtAv0.70.pu14 -nev 10
 
 int main (int argc, char ** argv) {
 
