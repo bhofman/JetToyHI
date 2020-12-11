@@ -36,7 +36,7 @@ private :
 
   
 public :
-  csSubtractorFullEvent(double alpha = 1., double rParam = 0.4, double ghostArea = 0.005, double ghostRapMax = 3.0) :
+  csSubtractorFullEvent(double alpha = 1., double rParam = 0.25, double ghostArea = 0.005, double ghostRapMax = 3.0) :
     alpha_(alpha),
     rParam_(rParam),
     ghostArea_(ghostArea),
@@ -67,6 +67,7 @@ public :
   std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 
     if(rho_<0.) {    
+      cout<<"old rho ="<<rho_<<endl;
       // create what we need for the background estimation
       //----------------------------------------------------------
       fastjet::GhostedAreaSpec ghost_spec(ghostRapMax_, 1, ghostArea_);
@@ -78,17 +79,18 @@ public :
       
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
+      cout<<"new rho ="<<rho_<<endl;
       
       subtractor_.set_background_estimator(&bkgd_estimator);
       subtractor_.set_common_bge_for_rho_and_rhom(true);
+      subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
     } else {
+      cout<<"old rho ="<<rho_<<endl;
       //if rho and rhom provided, use externally supplied densities
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
     }
 
-    //std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_,ghostRapMax_); // this version should be not used. Use the version below.
     std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
-   
     
     return corrected_event;
   }
