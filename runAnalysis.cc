@@ -134,7 +134,7 @@ int main (int argc, char ** argv) {
     }
     jetCollectionRaw.addVector("widthRaw", widthRaw);
     jetCollectionRaw.addVector("pTDRaw", pTDRaw);
-
+    trw.addCollection("rawJet",       jetCollectionRaw);
 
     //---------------------------------------------------------------------------
     //   background subtraction Jet-by-Jet
@@ -165,6 +165,10 @@ int main (int argc, char ** argv) {
     jmRaw.matchJets();
     jmRaw.reorderedToTag(jetCollectionRaw);
 
+    trw.addCollection("csJet",        jetCollectionCS);
+    trw.addCollection("csRho",         rho);
+    trw.addCollection("csRhom",        rhom);
+
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
     //---------------------------------------------------------------------------
@@ -186,7 +190,11 @@ int main (int argc, char ** argv) {
     jmCSFull.setTagJets(jetCollectionSig);
     jmCSFull.matchJets();
     jmCSFull.reorderedToTag(jetCollectionCSFull);
-    
+
+    trw.addCollection("csFullJet",        jetCollectionCSFull);
+    trw.addCollection("csFullRho",         rhoFull);
+    trw.addCollection("csFullRhom",        rhomFull);
+
     //---------------------------------------------------------------------------
     //   Groom the jets
     //---------------------------------------------------------------------------
@@ -197,7 +205,6 @@ int main (int argc, char ** argv) {
     jetCollectionSigSDBeta00Z01.addVector("zgSigSDBeta00Z01",    sdgSigBeta00Z01.getZgs());
     jetCollectionSigSDBeta00Z01.addVector("ndropSigSDBeta00Z01", sdgSigBeta00Z01.getNDroppedSubjets());
     jetCollectionSigSDBeta00Z01.addVector("dr12SigSDBeta00Z01",  sdgSigBeta00Z01.getDR12());
-  
 
     //---------------------------------------------------------------------------
     //   write tree
@@ -207,21 +214,10 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("csRho",         rho);
-    trw.addCollection("csRhom",        rhom);
-
-    trw.addCollection("csFullRho",         rhoFull);
-    trw.addCollection("csFullRhom",        rhomFull);
-
     trw.addPartonCollection("partons",       partons);
-
     trw.addCollection("sigJet",        jetCollectionSig);
     trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
-
-    trw.addCollection("csJet",        jetCollectionCS);
-    trw.addCollection("csFullJet",        jetCollectionCSFull);
-    trw.addCollection("rawJet",       jetCollectionRaw);
-    
+  
     trw.fillTree();
 
   }//event loop
