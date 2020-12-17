@@ -141,7 +141,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);
+    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  
     csSub.setInputParticles(particlesMerged);
     jetCollection jetCollectionCS(csSub.doSubtraction());
     
@@ -165,9 +165,9 @@ int main (int argc, char ** argv) {
     jmRaw.matchJets();
     jmRaw.reorderedToTag(jetCollectionRaw);
 
-    trw.addCollection("csJet",        jetCollectionCS);
-    trw.addCollection("csRho",         rho);
-    trw.addCollection("csRhom",        rhom);
+    trw.addCollection("csJetJet",        jetCollectionCS);
+    trw.addCollection("csJetJetRho",         rho);
+    trw.addCollection("csJetJetRhom",        rhom);
 
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
@@ -177,6 +177,8 @@ int main (int argc, char ** argv) {
     csSubtractorFullEvent csSubFull( 0., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
     csSubFull.setInputParticles(particlesMerged);
     jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent());
+
+    // Now that we extracted the full event we need to redo our jet finding
 
     //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
@@ -191,7 +193,7 @@ int main (int argc, char ** argv) {
     jmCSFull.matchJets();
     jmCSFull.reorderedToTag(jetCollectionCSFull);
 
-    trw.addCollection("csFullJet",        jetCollectionCSFull);
+    trw.addCollection("csFull",        jetCollectionCSFull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
 

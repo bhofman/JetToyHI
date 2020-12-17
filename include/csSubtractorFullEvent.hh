@@ -67,7 +67,7 @@ public :
   std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 
     if(rho_<0.) {    
-      cout<<"old rho ="<<rho_<<endl;
+      cout << "old1 rho = " << rho_ << endl;
       // create what we need for the background estimation
       //----------------------------------------------------------
       fastjet::GhostedAreaSpec ghost_spec(ghostRapMax_, 1, ghostArea_);
@@ -79,13 +79,18 @@ public :
       
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
-      cout<<"new rho ="<<rho_<<endl;
+      cout << "new rho = "<< rho_ << endl;
       
-      subtractor_.set_background_estimator(&bkgd_estimator);
-      subtractor_.set_common_bge_for_rho_and_rhom(true);
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
+
+      subtractor_.set_background_estimator(&bkgd_estimator);
+      //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
+      subtractor_.set_max_eta(9999.);
+      subtractor_.initialize();
+      // print info (optional)
+      //cout << subtractor_.description() << endl;
     } else {
-      cout<<"old rho ="<<rho_<<endl;
+      cout << "old2 rho = " << rho_ << endl;
       //if rho and rhom provided, use externally supplied densities
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
     }
