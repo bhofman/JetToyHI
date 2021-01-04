@@ -136,6 +136,13 @@ int main (int argc, char ** argv) {
     jetCollectionRaw.addVector("pTDRaw", pTDRaw);
     trw.addCollection("rawJet",       jetCollectionRaw);
 
+    //match Raw(=unsubtracted) jets to signal jets
+    jetMatcher jmRaw(R);
+    jmRaw.setBaseJets(jetCollectionRaw);
+    jmRaw.setTagJets(jetCollectionSig);
+    jmRaw.matchJets();
+    jmRaw.reorderedToTag(jetCollectionRaw);
+
     //---------------------------------------------------------------------------
     //   background subtraction Jet-by-Jet
     //---------------------------------------------------------------------------
@@ -158,13 +165,6 @@ int main (int argc, char ** argv) {
     jmCS.matchJets();
     jmCS.reorderedToTag(jetCollectionCS);
     
-    //match Raw(=unsubtracted) jets to signal jets
-    jetMatcher jmRaw(R);
-    jmRaw.setBaseJets(jetCollectionRaw);
-    jmRaw.setTagJets(jetCollectionSig);
-    jmRaw.matchJets();
-    jmRaw.reorderedToTag(jetCollectionRaw);
-
     trw.addCollection("csJetJet",        jetCollectionCS);
     trw.addCollection("csJetJetRho",         rho);
     trw.addCollection("csJetJetRhom",        rhom);
@@ -174,7 +174,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 0., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
+    csSubtractorFullEvent csSubFull( 1., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
     csSubFull.setInputParticles(particlesMerged);
     jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent());
 
