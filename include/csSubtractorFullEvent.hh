@@ -49,7 +49,6 @@ public :
     subtractor_.set_max_distance(rParam_); //free parameter for the maximal allowed distance between particle i and ghost k
     subtractor_.set_alpha(alpha_); // free parameter for the distance measure (the exponent of particle pt). Note that in older versions of the package alpha was multiplied by two but in newer versions this is not the case anymore
     subtractor_.set_do_mass_subtraction(); // No function argument needed, was (true);
-
   }
 
   void setAlpha(double a)     { alpha_ = a; }
@@ -74,29 +73,26 @@ public :
       fastjet::JetDefinition jet_def_bkgd(fastjet::kt_algorithm, 0.4);
       fastjet::AreaDefinition area_def_bkgd(fastjet::active_area_explicit_ghosts,ghost_spec);
       fastjet::Selector selector = fastjet::SelectorAbsRapMax(ghostRapMax_-0.4) * (!fastjet::SelectorNHardest(2));
+      
       fastjet::JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
       bkgd_estimator.set_particles(fjInputs_);
-      
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
       cout << "new rho = "<< rho_ << endl;
       
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
-
       subtractor_.set_background_estimator(&bkgd_estimator);
-      //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
-      subtractor_.set_max_eta(9999.);
+      subtractor_.set_max_eta(3.);
       subtractor_.initialize();
-      // print info (optional)
-      //cout << subtractor_.description() << endl;
-    } else {
+      //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
+      //cout << subtractor_.description() << endl; // print info (optional)
+
+    } else { // here I get pt=0
       cout << "old2 rho = " << rho_ << endl;
       //if rho and rhom provided, use externally supplied densities
       subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
     }
-
     std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
-    
     return corrected_event;
   }
 };

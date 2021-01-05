@@ -123,7 +123,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csRaw(particlesMerged, jet_def, area_def);
-    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(10.))));
+    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(15.))));
 
     //calculate some angularities
     vector<double> widthRaw; widthRaw.reserve(jetCollectionRaw.getJet().size());
@@ -132,9 +132,6 @@ int main (int argc, char ** argv) {
       widthRaw.push_back(width.result(jet));
       pTDRaw.push_back(pTD.result(jet));
     }
-    jetCollectionRaw.addVector("widthRaw", widthRaw);
-    jetCollectionRaw.addVector("pTDRaw", pTDRaw);
-    trw.addCollection("rawJet",       jetCollectionRaw);
 
     //match Raw(=unsubtracted) jets to signal jets
     jetMatcher jmRaw(R);
@@ -143,20 +140,24 @@ int main (int argc, char ** argv) {
     jmRaw.matchJets();
     jmRaw.reorderedToTag(jetCollectionRaw);
 
+    jetCollectionRaw.addVector("widthRaw", widthRaw);
+    jetCollectionRaw.addVector("pTDRaw", pTDRaw);
+    trw.addCollection("rawJet",       jetCollectionRaw);
+
     //---------------------------------------------------------------------------
     //   background subtraction Jet-by-Jet
     //---------------------------------------------------------------------------
 
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  
+    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
     csSub.setInputParticles(particlesMerged);
     jetCollection jetCollectionCS(csSub.doSubtraction());
     
     //Background densities used by constituent subtraction
     std::vector<double> rho;
     std::vector<double> rhom;
-    rho.push_back(csSub.getRho());    // Same for full event
-    rhom.push_back(csSub.getRhoM());  // Same for full event
+    rho.push_back(csSub.getRho());    // not Same for full event
+    rhom.push_back(csSub.getRhoM());  // not Same for full event
 
     //match CS jets to signal jets
     jetMatcher jmCS(R);
@@ -172,19 +173,27 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
     //---------------------------------------------------------------------------
-
+    
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 1., 0.25, 0.005,ghostRapMax);  // No jet R and jetRapMax 
+    csSubtractorFullEvent csSubFull( 0., 0.4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
-    jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent());
 
+    csSubFull.setRho(csSub.getRho());   //force same rho 
+    csSubFull.setRhom(csSub.getRhoM()); //force same rho // This seems te get us in the right ball park..
+
+    //jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent()); // <-- This is my full event, not jets?
     // Now that we extracted the full event we need to redo our jet finding
+    fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
+    jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
 
     //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
     std::vector<double> rhomFull;
     rhoFull.push_back(csSubFull.getRho());    // Not same for full event
     rhomFull.push_back(csSubFull.getRhoM());  // Not same for full event
+
+    // jj en full do not use same rho, does not make sense(?)
+    cout<<"rho: "<<rho<<" rho full: "<<rhoFull<<endl;
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
