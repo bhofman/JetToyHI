@@ -175,7 +175,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 0., .4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubtractorFullEvent csSubFull( 0., .25, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
@@ -196,6 +196,8 @@ int main (int argc, char ** argv) {
     trw.addCollection("csFull",        jetCollectionCSFull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
+
+    //cout<<jetCollectionCSFull.getJet().begin().perp()<<endl;
 
     //trw.addCollection("csSigMinFull",        jetCollectionSig-jetCollectionCSFull);
 
