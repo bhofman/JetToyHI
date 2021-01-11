@@ -65,33 +65,33 @@ public :
   
   std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 
+    fastjet::GhostedAreaSpec ghost_spec(ghostRapMax_, 1, ghostArea_);
+    fastjet::JetDefinition jet_def_bkgd(fastjet::kt_algorithm, 0.4);
+    fastjet::AreaDefinition area_def_bkgd(fastjet::active_area_explicit_ghosts,ghost_spec);
+    fastjet::Selector selector = fastjet::SelectorAbsRapMax(ghostRapMax_-0.4) * (!fastjet::SelectorNHardest(2));
+    fastjet::JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
+    bkgd_estimator.set_particles(fjInputs_);
+
+    subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
+    subtractor_.set_background_estimator(&bkgd_estimator);
+    subtractor_.set_max_eta(3.);
+    //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
+
     if(rho_<0.) {    
-      cout << "old1 rho = " << rho_ << endl;
-      // create what we need for the background estimation
-      //----------------------------------------------------------
-      fastjet::GhostedAreaSpec ghost_spec(ghostRapMax_, 1, ghostArea_);
-      fastjet::JetDefinition jet_def_bkgd(fastjet::kt_algorithm, 0.4);
-      fastjet::AreaDefinition area_def_bkgd(fastjet::active_area_explicit_ghosts,ghost_spec);
-      fastjet::Selector selector = fastjet::SelectorAbsRapMax(ghostRapMax_-0.4) * (!fastjet::SelectorNHardest(2));
-      
-      fastjet::JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
-      bkgd_estimator.set_particles(fjInputs_);
+      cout << "rho < 0; with rho = " << rho_ << endl;
+      cout << "rhom = " << rhom_ << endl;
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
-      cout << "new rho = "<< rho_ << endl;
-      
-      subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
-      subtractor_.set_background_estimator(&bkgd_estimator);
-      subtractor_.set_max_eta(3.);
-      subtractor_.initialize();
-      //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
-      //cout << subtractor_.description() << endl; // print info (optional)
+      cout << "Now using rho = "<< rho_ << endl;
+      cout << "Now using rhom = "<< rhom_ << endl;
+      } else {
+      cout << "Externally rho = " << rho_ << endl;
+      cout << "Externally rhom = " << rhom_ << endl;
+      }
 
-    } else { // here I get pt=0
-      cout << "old2 rho = " << rho_ << endl;
-      //if rho and rhom provided, use externally supplied densities
-      subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
-    }
+    subtractor_.initialize();
+    
+    //cout << subtractor_.description() << endl; // print info (optional)
     std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
     return corrected_event;
   }

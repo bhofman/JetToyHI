@@ -175,13 +175,13 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 0., 0.4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubtractorFullEvent csSubFull( 1., 2, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
 
     csSubFull.setRho(csSub.getRho());   //force same rho 
     csSubFull.setRhom(csSub.getRhoM()); //force same rho // This seems te get us in the right ball park..
+    //csSubFull.setRhom(0); //force same rho // This seems te get us in the right ball park..
 
-    //jetCollection jetCollectionCSFull(csSubFull.doSubtractionFullEvent()); // <-- This is my full event, not jets?
     // Now that we extracted the full event we need to redo our jet finding
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
@@ -192,8 +192,8 @@ int main (int argc, char ** argv) {
     rhoFull.push_back(csSubFull.getRho());    // Not same for full event
     rhomFull.push_back(csSubFull.getRhoM());  // Not same for full event
 
-    // jj en full do not use same rho, does not make sense(?)
-    cout<<"rho: "<<rho<<" rho full: "<<rhoFull<<endl;
+    // jetjet en full do not use same rho, does not make sense!
+    //cout<<"rho: "<<rho<<" rho full: "<<rhoFull<<endl;
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
@@ -205,6 +205,8 @@ int main (int argc, char ** argv) {
     trw.addCollection("csFull",        jetCollectionCSFull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
+
+    //trw.addCollection("csSigMinFull",        jetCollectionSig-jetCollectionCSFull);
 
     //---------------------------------------------------------------------------
     //   Groom the jets
@@ -225,7 +227,7 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addPartonCollection("partons",       partons);
+    //trw.addPartonCollection("partons",       partons);
     trw.addCollection("sigJet",        jetCollectionSig);
     trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
   
