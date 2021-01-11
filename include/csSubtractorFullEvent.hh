@@ -48,6 +48,7 @@ public :
     subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
     subtractor_.set_max_distance(rParam_); //free parameter for the maximal allowed distance between particle i and ghost k
     subtractor_.set_alpha(alpha_); // free parameter for the distance measure (the exponent of particle pt). Note that in older versions of the package alpha was multiplied by two but in newer versions this is not the case anymore
+    //subtractor_.set_scale_fourmomentum(); //Keep rapidity and pseudo-rapidity fixed (scale fourmomentum). Recommended - observed better performance than the mass correction. Use: subtractor.set_scale_fourmomentum();
     subtractor_.set_do_mass_subtraction(); // No function argument needed, was (true);
   }
 
@@ -65,30 +66,23 @@ public :
   
   std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 
-    fastjet::GhostedAreaSpec ghost_spec(ghostRapMax_, 1, ghostArea_);
-    fastjet::JetDefinition jet_def_bkgd(fastjet::kt_algorithm, 0.4);
-    fastjet::AreaDefinition area_def_bkgd(fastjet::active_area_explicit_ghosts,ghost_spec);
-    fastjet::Selector selector = fastjet::SelectorAbsRapMax(ghostRapMax_-0.4) * (!fastjet::SelectorNHardest(2));
-    fastjet::JetMedianBackgroundEstimator bkgd_estimator(selector, jet_def_bkgd, area_def_bkgd);
-    bkgd_estimator.set_particles(fjInputs_);
-
-    subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
-    subtractor_.set_background_estimator(&bkgd_estimator);
-    subtractor_.set_max_eta(3.);
-    //subtractor_.set_common_bge_for_rho_and_rhom(true); // not allowed when supplying externally the values for rho and rho_m.
+    fastjet::GridMedianBackgroundEstimator bkgd_estimator(3.,0.5);  //max_eta, grid spacing
+    bkgd_estimator.set_particles(fjInputs_);  
 
     if(rho_<0.) {    
-      cout << "rho < 0; with rho = " << rho_ << endl;
-      cout << "rhom = " << rhom_ << endl;
+      cout << "rho < 0; with rho = " << rho_ <<"rhom = " << rhom_ << endl;
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
       cout << "Now using rho = "<< rho_ << endl;
       cout << "Now using rhom = "<< rhom_ << endl;
       } else {
-      cout << "Externally rho = " << rho_ << endl;
-      cout << "Externally rhom = " << rhom_ << endl;
+      cout << "External rho = " << rho_ << endl;
+      cout << "External rhom = " << rhom_ << endl;
       }
 
+    subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
+    subtractor_.set_background_estimator(&bkgd_estimator);
+    subtractor_.set_max_eta(3.);
     subtractor_.initialize();
     
     //cout << subtractor_.description() << endl; // print info (optional)
