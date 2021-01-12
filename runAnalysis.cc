@@ -156,8 +156,8 @@ int main (int argc, char ** argv) {
     //Background densities used by constituent subtraction
     std::vector<double> rho;
     std::vector<double> rhom;
-    rho.push_back(csSub.getRho());    // not Same for full event
-    rhom.push_back(csSub.getRhoM());  // not Same for full event
+    rho.push_back(csSub.getRho());    
+    rhom.push_back(csSub.getRhoM());  
 
     //match CS jets to signal jets
     jetMatcher jmCS(R);
@@ -175,7 +175,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 0., .25, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubtractorFullEvent csSubFull( 2., .5, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
@@ -183,8 +183,8 @@ int main (int argc, char ** argv) {
     //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
     std::vector<double> rhomFull;
-    rhoFull.push_back(csSubFull.getRho());    // Not same for full event
-    rhomFull.push_back(csSubFull.getRhoM());  // Not same for full event
+    rhoFull.push_back(csSubFull.getRho());  
+    rhomFull.push_back(csSubFull.getRhoM()); 
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
@@ -197,9 +197,22 @@ int main (int argc, char ** argv) {
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
 
-    //cout<<jetCollectionCSFull.getJet().begin().perp()<<endl;
+    std::vector<double> ptPull; ptPull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> rapPull; rapPull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> phiPull; phiPull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPull; mPull.reserve(jetCollectionSig.getJet().size());
 
-    //trw.addCollection("csSigMinFull",        jetCollectionSig-jetCollectionCSFull);
+    for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
+      ptPull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/jetCollectionSig.getJet()[i].pt());
+      rapPull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/jetCollectionSig.getJet()[i].rap());
+      phiPull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/jetCollectionSig.getJet()[i].phi());
+      mPull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/jetCollectionSig.getJet()[i].m());
+    }
+
+    trw.addCollection("ptPull",        ptPull);
+    trw.addCollection("rapPull",        rapPull);
+    trw.addCollection("phiPull",        phiPull);
+    trw.addCollection("mPull",        mPull);
 
     //---------------------------------------------------------------------------
     //   Groom the jets

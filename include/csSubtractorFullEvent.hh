@@ -73,11 +73,9 @@ public :
       cout << "rho < 0; with rho = " << rho_ <<"rhom = " << rhom_ << endl;
       rho_ = bkgd_estimator.rho();
       rhom_ = bkgd_estimator.rho_m();
-      cout << "Now using rho = "<< rho_ << endl;
-      cout << "Now using rhom = "<< rhom_ << endl;
+      cout << "Now using rho = "<< rho_ << " using rhom = "<< rhom_ << endl;
       } else {
-      cout << "External rho = " << rho_ << endl;
-      cout << "External rhom = " << rhom_ << endl;
+      cout << "External rho = " << rho_ << " External rhom = " << rhom_ << endl;
       }
 
     subtractor_ = contrib::ConstituentSubtractor(rho_,rhom_,alpha_,rParam_,contrib::ConstituentSubtractor::deltaR);
