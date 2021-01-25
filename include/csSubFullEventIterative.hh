@@ -65,13 +65,13 @@ public:
 
 	void setBackground() {
 		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
-		bkgd_estimator.set_particles(fjInputs_);  
+		bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
 	}
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 		subtractor_.set_ghost_area(ghostArea_);
-		subtractor_.set_parameters(max_distances_,alphas_);
+		subtractor_.set_parameters(rParam_,alpha_);
 		subtractor_.initialize();
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
