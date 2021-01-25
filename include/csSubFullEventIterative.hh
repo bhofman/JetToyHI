@@ -24,16 +24,19 @@ using namespace fastjet;
 class csSubFullEventIterative {
 
 private:
-	std::vector<fastjet::PseudoJet> fjInputs_;
-	contrib::IterativeConstituentSubtractor subtractor_;
-	// Parameters for csSubs
-	vector<double> rParam_;
 	vector<double> alpha_;
+	vector<double> rParam_;
 	double ghostArea_;
-	double max_eta_;
 	double ghostRapMax_;
 	double rho_;
 	double rhom_;
+	double max_eta_;
+
+	std::vector<fastjet::PseudoJet> fjInputs_;
+	contrib::IterativeConstituentSubtractor subtractor_;
+
+
+
 
 public:
 	csSubFullEventIterative(vector<double> alpha = {1.,1.}, vector<double> rParam = {0.25,0.25},  double ghostArea = 0.005,	double ghostRapMax = 3.0) :

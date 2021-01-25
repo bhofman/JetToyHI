@@ -175,7 +175,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {2.,1.} , {.2,.2}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullEventIterative csSubFull( {1.,1.,1.} , {.2,.1,.05}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackground();
