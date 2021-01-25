@@ -203,10 +203,10 @@ int main (int argc, char ** argv) {
     std::vector<double> mPull; mPull.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPull.push_back(jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt()/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      rapPull.push_back(jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap()/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
-      phiPull.push_back(jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi()/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
-      mPull.push_back(jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m()/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      rapPull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
+      phiPull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
+      mPull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPull",        ptPull);
