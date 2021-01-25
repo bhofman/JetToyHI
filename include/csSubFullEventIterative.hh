@@ -45,7 +45,6 @@ public:
 		rhom_(-1)
 	{
 		subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
-		subtractor_.set_parameters(max_distances_,alphas_);
 		subtractor_.set_ghost_removal(true);
 		subtractor_.set_scale_fourmomentum(); 
 	}
@@ -72,6 +71,7 @@ public:
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
 		subtractor_.set_ghost_area(ghostArea_);
+		subtractor_.set_parameters(max_distances_,alphas_);
 		subtractor_.initialize();
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
