@@ -175,19 +175,13 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {1.,1.,1.} , {.2,.1,.05}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullEventIterative csSubFull( {1.,1.} , {.1,.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackground();
-
+    
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
-
-    //Background densities used by constituent subtraction
-    std::vector<double> rhoFull;
-    std::vector<double> rhomFull;
-    rhoFull.push_back(csSubFull.getRho());  
-    rhomFull.push_back(csSubFull.getRhoM()); 
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
@@ -196,6 +190,12 @@ int main (int argc, char ** argv) {
     jmCSFull.matchJets();
     jmCSFull.reorderedToTag(jetCollectionCSFull);
 
+    //Background densities used by constituent subtraction // what do to with iteration? only write initial rho?
+    std::vector<double> rhoFull;
+    std::vector<double> rhomFull;
+    rhoFull.push_back(csSubFull.getRho());  
+    rhomFull.push_back(csSubFull.getRhoM()); 
+    
     trw.addCollection("csFull",        jetCollectionCSFull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
@@ -250,7 +250,7 @@ int main (int argc, char ** argv) {
 
   TTree *trOut = trw.getTree();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetToyHIResultCSI.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetCSI.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();

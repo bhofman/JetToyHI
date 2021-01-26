@@ -35,9 +35,6 @@ private:
 	std::vector<fastjet::PseudoJet> fjInputs_;
 	contrib::IterativeConstituentSubtractor subtractor_;
 
-
-
-
 public:
 	csSubFullEventIterative(vector<double> alpha = {1.,1.}, vector<double> rParam = {0.25,0.25},  double ghostArea = 0.005,	double ghostRapMax = 3.0) :
 		alpha_(alpha),
@@ -49,7 +46,7 @@ public:
 	{
 		subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
 		subtractor_.set_ghost_removal(true);
-		subtractor_.set_scale_fourmomentum(); 
+		subtractor_.set_scale_fourmomentum(); // <M_pull> off: -0.1505 on: -0.1164
 	}
 
 	void setAlpha(vector<double> a)     { alpha_ = a; }
@@ -70,6 +67,8 @@ public:
 		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
 		bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
+		rho_ = bge_rho.rho();
+		rhom_ = bge_rho.rho_m();
 	}
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
@@ -78,6 +77,7 @@ public:
 		subtractor_.initialize();
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
+		cout << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
 
 		std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
 		return corrected_event;

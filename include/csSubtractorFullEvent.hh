@@ -88,5 +88,4 @@ public :
     return corrected_event;
   }
 };
-
 #endif
