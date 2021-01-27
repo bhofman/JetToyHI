@@ -36,7 +36,7 @@ private:
 	contrib::IterativeConstituentSubtractor subtractor_;
 
 public:
-	csSubFullEventIterative(vector<double> alpha = {1.,1.}, vector<double> rParam = {0.25,0.25},  double ghostArea = 0.005,	double ghostRapMax = 3.0) :
+	csSubFullEventIterative(vector<double> alpha = {0.,0.,0.}, vector<double> rParam = {0.1,0.1,.1},  double ghostArea = 0.005,	double ghostRapMax = 3.0) :
 		alpha_(alpha),
 		rParam_(rParam),
 		ghostArea_(ghostArea),

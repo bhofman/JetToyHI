@@ -105,7 +105,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(15.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(25.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //calculate some angularities
     vector<double> widthSig; widthSig.reserve(jetCollectionSig.getJet().size());
@@ -123,7 +123,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csRaw(particlesMerged, jet_def, area_def);
-    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(15.))));
+    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(25.))));
 
     //calculate some angularities
     vector<double> widthRaw; widthRaw.reserve(jetCollectionRaw.getJet().size());
@@ -175,13 +175,13 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {1.,1.} , {.1,.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullEventIterative csSubFull( {0.} , {.2}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackground();
     
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
+    jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
@@ -190,12 +190,12 @@ int main (int argc, char ** argv) {
     jmCSFull.matchJets();
     jmCSFull.reorderedToTag(jetCollectionCSFull);
 
-    //Background densities used by constituent subtraction // what do to with iteration? only write initial rho?
+    //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
     std::vector<double> rhomFull;
     rhoFull.push_back(csSubFull.getRho());  
     rhomFull.push_back(csSubFull.getRhoM()); 
-    
+
     trw.addCollection("csFull",        jetCollectionCSFull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
@@ -210,6 +210,10 @@ int main (int argc, char ** argv) {
       rapPull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
       phiPull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
       mPull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      //if (jetCollectionCSFull.getJet()[i].m() == 0){
+      //  cout<<"I Found pt=0 with: "<<endl<<jetCollectionCSFull.getJet()[i]<<" signal: "<<jetCollectionSig.getJet()[i]<<endl;
+      //  cout<<"Area: "<<jetCollectionSig.getJet()[i].pt()<<endl;
+      //}
     }
 
     trw.addCollection("ptPull",        ptPull);
