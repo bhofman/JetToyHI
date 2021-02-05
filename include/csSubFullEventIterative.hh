@@ -46,7 +46,7 @@ public:
 	{
 		subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
 		subtractor_.set_ghost_removal(true);
-		subtractor_.set_scale_fourmomentum(); // <M_pull> off: -0.1505 on: -0.1164
+		subtractor_.set_scale_fourmomentum();
 	}
 
 	void setAlpha(vector<double> a)     { alpha_ = a; }
@@ -63,8 +63,20 @@ public:
 
 	void setMaxEta(double max_eta)     	{ max_eta_ = max_eta; subtractor_.set_max_eta(max_eta); }
 
-	void setBackground() {
+	void setBackgroundGrid() { // Set the background rho using a grid instead of jets
 		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
+		bge_rho.set_particles(fjInputs_);  
+		subtractor_.set_background_estimator(&bge_rho); 
+		rho_ = bge_rho.rho();
+		rhom_ = bge_rho.rho_m();
+	}
+
+	void setBackground() {
+		AreaDefinition area_def_bkgd(active_area_explicit_ghosts, GhostedAreaSpec(5.)); // Ghost rho should go atleasy 2R beyond jet region
+		JetDefinition jet_def_bkgd(kt_algorithm, 0.4);
+   		Selector selector = SelectorAbsRapMax(3.) * (!SelectorNHardest(2));
+		JetMedianBackgroundEstimator bge_rho(selector, jet_def_bkgd, area_def_bkgd);
+
 		bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();

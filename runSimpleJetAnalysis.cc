@@ -126,6 +126,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("eventWeight",   eventWeight);
     trw.addPartonCollection("partons",       partons);
 
+    trw.addCollection("particlesBkg",        particlesBkg);
     trw.addCollection("sigJet",        jetCollectionSig);
     trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
     

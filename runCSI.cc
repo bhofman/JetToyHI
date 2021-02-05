@@ -254,7 +254,7 @@ int main (int argc, char ** argv) {
 
   TTree *trOut = trw.getTree();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetCSI.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetCSIjetRho.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();
