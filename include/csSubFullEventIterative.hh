@@ -66,6 +66,7 @@ public:
 	void setBackgroundGrid() { // Set the background rho using a grid instead of jets
 		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
 		bge_rho.set_particles(fjInputs_);  
+
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
@@ -76,8 +77,8 @@ public:
 		JetDefinition jet_def_bkgd(kt_algorithm, 0.4);
    		Selector selector = SelectorAbsRapMax(3.) * (!SelectorNHardest(2));
 		JetMedianBackgroundEstimator bge_rho(selector, jet_def_bkgd, area_def_bkgd);
-
 		bge_rho.set_particles(fjInputs_);  
+
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
@@ -87,6 +88,7 @@ public:
 		subtractor_.set_ghost_area(ghostArea_);
 		subtractor_.set_parameters(rParam_,alpha_);
 		subtractor_.initialize();
+		cout << subtractor_.description() << endl;
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
 		cout << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
