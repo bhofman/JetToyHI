@@ -48,7 +48,7 @@ int main (int argc, char ** argv) {
   double R                   = 0.4;
   double ghostRapMax         = 6.0;
   double ghost_area          = 0.005;
-  int    active_area_repeats = 1;     ///////////////////// What does this do? Repeat the whole ghosting procedure? Some RNG element involved?
+  int    active_area_repeats = 1;     
   GhostedAreaSpec ghost_spec(ghostRapMax, active_area_repeats, ghost_area);
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
