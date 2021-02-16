@@ -48,7 +48,7 @@ int main (int argc, char ** argv) {
   double R                   = 0.4;
   double ghostRapMax         = 6.0;
   double ghost_area          = 0.005;
-  int    active_area_repeats = 1;     ///////////////////// What does this do? Repeat the whole ghosting procedure? Some RNG element involved?
+  int    active_area_repeats = 1;   
   GhostedAreaSpec ghost_spec(ghostRapMax, active_area_repeats, ghost_area);
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
@@ -105,7 +105,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(15.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(25.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //calculate some angularities
     vector<double> widthSig; widthSig.reserve(jetCollectionSig.getJet().size());
@@ -123,7 +123,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csRaw(particlesMerged, jet_def, area_def);
-    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(15.))));
+    jetCollection jetCollectionRaw(sorted_by_pt(jet_selector(csRaw.inclusive_jets(25.))));
 
     //calculate some angularities
     vector<double> widthRaw; widthRaw.reserve(jetCollectionRaw.getJet().size());
@@ -170,15 +170,32 @@ int main (int argc, char ** argv) {
     trw.addCollection("csJetJetRho",         rho);
     trw.addCollection("csJetJetRhom",        rhom);
 
+    std::vector<double> ptPullJet; ptPullJet.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> rapPullJet; rapPullJet.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> phiPullJet; phiPullJet.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPullJet; mPullJet.reserve(jetCollectionSig.getJet().size());
+
+    for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
+      ptPullJet.push_back((jetCollectionCS.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCS.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      rapPullJet.push_back((jetCollectionCS.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCS.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
+      phiPullJet.push_back((jetCollectionCS.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCS.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
+      mPullJet.push_back((jetCollectionCS.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCS.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+    }
+
+    trw.addCollection("ptPullJet",        ptPullJet);
+    trw.addCollection("rapPullJet",        rapPullJet);
+    trw.addCollection("phiPullJet",        phiPullJet);
+    trw.addCollection("mPullJet",        mPullJet);
+
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
-    csSubtractorFullEvent csSubFull( 2., .5, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubtractorFullEvent csSubFull( 0., .4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(15.)))); 
+    jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
 
     //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
@@ -197,22 +214,22 @@ int main (int argc, char ** argv) {
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
 
-    std::vector<double> ptPull; ptPull.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> rapPull; rapPull.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> phiPull; phiPull.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> mPull; mPull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> ptPullFull; ptPullFull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> rapPullFull; rapPullFull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> phiPullFull; phiPullFull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPullFull; mPullFull.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      rapPull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
-      phiPull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
-      mPull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPullFull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      rapPullFull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
+      phiPullFull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
+      mPullFull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
-    trw.addCollection("ptPull",        ptPull);
-    trw.addCollection("rapPull",        rapPull);
-    trw.addCollection("phiPull",        phiPull);
-    trw.addCollection("mPull",        mPull);
+    trw.addCollection("ptPullFull",        ptPullFull);
+    trw.addCollection("rapPullFull",        rapPullFull);
+    trw.addCollection("phiPullFull",        phiPullFull);
+    trw.addCollection("mPullFull",        mPullFull);
 
     //---------------------------------------------------------------------------
     //   Groom the jets

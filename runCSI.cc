@@ -171,7 +171,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("csJetJetRhom",        rhom);
 
     //---------------------------------------------------------------------------
-    //   background subtraction FULL EVENT
+    //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
     
     //We want to substract for full event instead:
@@ -179,7 +179,7 @@ int main (int argc, char ** argv) {
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackground();
-    
+    //This line crashes:
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCSFull(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
 
@@ -220,7 +220,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("rapPull",        rapPull);
     trw.addCollection("phiPull",        phiPull);
     trw.addCollection("mPull",        mPull);
-
+  
     //---------------------------------------------------------------------------
     //   Groom the jets
     //---------------------------------------------------------------------------

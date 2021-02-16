@@ -47,6 +47,8 @@ public:
 		subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
 		subtractor_.set_ghost_removal(true);
 		subtractor_.set_scale_fourmomentum();
+		subtractor_.set_parameters(rParam_,alpha_);
+		subtractor_.set_ghost_area(ghostArea_);
 	}
 
 	void setAlpha(vector<double> a)     { alpha_ = a; }
@@ -64,30 +66,31 @@ public:
 	void setMaxEta(double max_eta)     	{ max_eta_ = max_eta; subtractor_.set_max_eta(max_eta); }
 
 	void setBackgroundGrid() { // Set the background rho using a grid instead of jets
-		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
-		bge_rho.set_particles(fjInputs_);  
+		subtractor_.initialize();
 
+		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
+		
+		bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
 	}
 
 	void setBackground() {
+		subtractor_.initialize();
+
 		AreaDefinition area_def_bkgd(active_area_explicit_ghosts, GhostedAreaSpec(5.)); // Ghost rho should go atleasy 2R beyond jet region
 		JetDefinition jet_def_bkgd(kt_algorithm, 0.4);
    		Selector selector = SelectorAbsRapMax(3.) * (!SelectorNHardest(2));
 		JetMedianBackgroundEstimator bge_rho(selector, jet_def_bkgd, area_def_bkgd);
-		bge_rho.set_particles(fjInputs_);  
 
+		bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
 	}
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
-		subtractor_.set_ghost_area(ghostArea_);
-		subtractor_.set_parameters(rParam_,alpha_);
-		subtractor_.initialize();
 		cout << subtractor_.description() << endl;
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
