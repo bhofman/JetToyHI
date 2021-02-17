@@ -71,6 +71,7 @@ int main (int argc, char ** argv) {
   {
     // increment event number    
     iev++;
+    //cout << iev << endl;
        
     Bar.Update(iev);
     Bar.PrintWithMod(entryDiv);
@@ -98,7 +99,7 @@ int main (int argc, char ** argv) {
     vector<PseudoJet> particlesMerged = particlesBkg;
     particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
     
-    std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
+    //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
 
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
@@ -147,7 +148,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   background subtraction Jet-by-Jet
     //---------------------------------------------------------------------------
-
+    /*
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
     csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
     csSub.setInputParticles(particlesMerged);
@@ -186,11 +187,11 @@ int main (int argc, char ** argv) {
     trw.addCollection("rapPullJet",        rapPullJet);
     trw.addCollection("phiPullJet",        phiPullJet);
     trw.addCollection("mPullJet",        mPullJet);
-
+    */
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
     //---------------------------------------------------------------------------
-    
+    /*
     //We want to substract for full event instead:
     csSubtractorFullEvent csSubFull( 0., .4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
@@ -230,7 +231,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("rapPullFull",        rapPullFull);
     trw.addCollection("phiPullFull",        phiPullFull);
     trw.addCollection("mPullFull",        mPullFull);
-
+    */
     //---------------------------------------------------------------------------
     //   Groom the jets
     //---------------------------------------------------------------------------
@@ -252,8 +253,8 @@ int main (int argc, char ** argv) {
     trw.addCollection("eventWeight",   eventWeight);
     //trw.addPartonCollection("partons",       partons);
     trw.addCollection("sigJet",        jetCollectionSig);
-    trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
-  
+    //trw.addCollection("sigJetSDBeta00Z01",      jetCollectionSigSDBeta00Z01);
+ 
     trw.fillTree();
 
   }//event loop
