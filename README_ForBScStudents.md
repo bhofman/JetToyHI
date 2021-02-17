@@ -92,6 +92,15 @@ TBrowser b
 ```
 Click on `jetTree` and play around.
 
+## Visual Studio Live Share
+
+Install Visual Studio Code.
+Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter.
+```sh
+ext install MS-vsliveshare.vsliveshare-pack
+```
+Login with github to share with other people
+
 ## Contribute
 * If you want to contribute to this code you need to have a github account. Go here to do so: https://github.com/join.
 * Fork the original repository. Go to: https://github.com/mverwe/JetToyHI and click 'Fork' in the upper right corner.
