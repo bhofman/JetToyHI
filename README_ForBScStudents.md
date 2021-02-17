@@ -92,14 +92,15 @@ TBrowser b
 ```
 Click on `jetTree` and play around.
 
-## Visual Studio Live Share
+### Visual Studio Live Share
 
 Install Visual Studio Code.
-Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter.
+Launch VS Code Quick Open (Ctrl+P), paste the following command:
 ```sh
 ext install MS-vsliveshare.vsliveshare-pack
 ```
-Login with github to share with other people
+ and press enter. 
+ Login with github to share with other people.
 
 ## Contribute
 * If you want to contribute to this code you need to have a github account. Go here to do so: https://github.com/join.
