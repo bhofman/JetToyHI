@@ -2,25 +2,21 @@
 
 ## Prerequisites
 
-If you are using mac or linux, the steps are relatively straightforward.  For windows machines I'm not sure what to do.  These are the things you need to install:
-
-* C++ compiler: on mac you could install xcode (found on App Store) to get the g++ compilers
+If you are using mac or linux, the steps are relatively straightforward.  For windows machines: https://www.virtualbox.org/
 
 ## JetToyHI installation
 
 ### Install ROOT
-The easiest is to just grep a precompiled version from the root website (take ROOT6)
-* https://root.cern.ch/content/release-61404
-
-### Computers in student room
-You can also use the computers in the student room on which a C++ compiler and ROOT are already installed. To use these computers login with your solis ID. Then open a terminal and type:
+Root dependencies:
 ```sh
-ali
-alienv
+sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
+libxft-dev libxext-dev python libssl-dev
 ```
-To test if ROOT now works type
+Then download root: https://root.cern/releases/release-62206/
+
 ```sh
-root
+tar -xzvf root_VERSION.tar.gz
+source root/bin/thisroot.sh 
 ```
 
 ### Install PYTHIA8
@@ -94,6 +90,16 @@ TBrowser b
 ```
 Click on `jetTree` and play around.
 
+### Visual Studio Live Share
+
+Install Visual Studio Code.
+Launch VS Code Quick Open (Ctrl+P), paste the following command:
+```sh
+ext install MS-vsliveshare.vsliveshare-pack
+```
+ and press enter. 
+ Login with github to share with other people.
+
 ## Contribute
 * If you want to contribute to this code you need to have a github account. Go here to do so: https://github.com/join.
 * Fork the original repository. Go to: https://github.com/mverwe/JetToyHI and click 'Fork' in the upper right corner.
@@ -113,5 +119,3 @@ You will find samples from various event generators. For underlying event we hav
 
 More details about the available samples can be found here: https://jetquenchingtools.github.io/ (public)
 (old twiki at cern: https://twiki.cern.ch/twiki/bin/view/JetQuenchingTools/PU14Samples)
-
-
