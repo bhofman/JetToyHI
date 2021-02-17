@@ -10,7 +10,7 @@ If you are using mac or linux, the steps are relatively straightforward.  For wi
 Root dependencies:
 ```sh
 sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
-libxft-dev libxext-dev python openssl-dev
+libxft-dev libxext-dev python libssl-dev
 ```
 Then download root: https://root.cern/releases/release-62206/
 
