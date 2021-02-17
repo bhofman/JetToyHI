@@ -88,6 +88,9 @@ public:
 		subtractor_.set_background_estimator(&bge_rho); 
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
+
+		subtractor_.set_background_estimator(&bkgd_estimator);
+		subtractor_.set_common_bge_for_rho_and_rhom(true);
 	}
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
