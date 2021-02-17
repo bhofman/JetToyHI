@@ -9,19 +9,12 @@ If you are using mac or linux, the steps are relatively straightforward.  For wi
 ## JetToyHI installation
 
 ### Install ROOT
-The easiest is to just grep a precompiled version from the root website (take ROOT6)
-* https://root.cern.ch/content/release-61404
-
-### Computers in student room
-You can also use the computers in the student room on which a C++ compiler and ROOT are already installed. To use these computers login with your solis ID. Then open a terminal and type:
+Root dependancies:
 ```sh
-ali
-alienv
+sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
+libxft-dev libxext-dev python openssl-dev
 ```
-To test if ROOT now works type
-```sh
-root
-```
+Then download root: https://root.cern/releases/release-62206/
 
 ### Install PYTHIA8
 ```sh
@@ -113,5 +106,18 @@ You will find samples from various event generators. For underlying event we hav
 
 More details about the available samples can be found here: https://jetquenchingtools.github.io/ (public)
 (old twiki at cern: https://twiki.cern.ch/twiki/bin/view/JetQuenchingTools/PU14Samples)
+
+
+
+### Computers in student room
+You can also use the computers in the student room on which a C++ compiler and ROOT are already installed. To use these computers login with your solis ID. Then open a terminal and type:
+```sh
+ali
+alienv
+```
+To test if ROOT now works type
+```sh
+root
+```
 
 
