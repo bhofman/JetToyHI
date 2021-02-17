@@ -16,6 +16,11 @@ libxft-dev libxext-dev python openssl-dev
 ```
 Then download root: https://root.cern/releases/release-62206/ ( Ubuntu 20 )
 
+```sh
+tar -xzvf root_VERSION.tar.gz
+source root/bin/thisroot.sh 
+```
+
 ### Install PYTHIA8
 ```sh
 wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8235.tgz
