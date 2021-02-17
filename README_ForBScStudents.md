@@ -121,18 +121,3 @@ You will find samples from various event generators. For underlying event we hav
 
 More details about the available samples can be found here: https://jetquenchingtools.github.io/ (public)
 (old twiki at cern: https://twiki.cern.ch/twiki/bin/view/JetQuenchingTools/PU14Samples)
-
-
-
-### Computers in student room
-You can also use the computers in the student room on which a C++ compiler and ROOT are already installed. To use these computers login with your solis ID. Then open a terminal and type:
-```sh
-ali
-alienv
-```
-To test if ROOT now works type
-```sh
-root
-```
-
-
