@@ -9,7 +9,7 @@ If you are using mac or linux, the steps are relatively straightforward.  For wi
 ## JetToyHI installation
 
 ### Install ROOT
-Root dependancies:
+Root dependencies:
 ```sh
 sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
 libxft-dev libxext-dev python openssl-dev
