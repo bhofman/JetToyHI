@@ -2,9 +2,7 @@
 
 ## Prerequisites
 
-If you are using mac or linux, the steps are relatively straightforward.  For windows machines I'm not sure what to do.  These are the things you need to install:
-
-* C++ compiler: on mac you could install xcode (found on App Store) to get the g++ compilers
+If you are using mac or linux, the steps are relatively straightforward.  For windows machines: https://www.virtualbox.org/
 
 ## JetToyHI installation
 
@@ -14,7 +12,7 @@ Root dependencies:
 sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
 libxft-dev libxext-dev python openssl-dev
 ```
-Then download root: https://root.cern/releases/release-62206/ ( Ubuntu 20 )
+Then download root: https://root.cern/releases/release-62206/
 
 ```sh
 tar -xzvf root_VERSION.tar.gz
