@@ -14,7 +14,7 @@ Root dependencies:
 sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
 libxft-dev libxext-dev python openssl-dev
 ```
-Then download root: https://root.cern/releases/release-62206/
+Then download root: https://root.cern/releases/release-62206/ ( Ubuntu 20 )
 
 ### Install PYTHIA8
 ```sh
