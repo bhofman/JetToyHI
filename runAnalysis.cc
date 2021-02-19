@@ -21,6 +21,7 @@
 #include "include/Angularity.hh"
 #include "include/csSubtractor.hh"
 #include "include/csSubtractorFullEvent.hh"
+#include "include/csSubFullEventIterative.hh"
 
 using namespace std;
 using namespace fastjet;
@@ -33,11 +34,18 @@ int main (int argc, char ** argv) {
   
   CmdLine cmdline(argc,argv);
   // inputs read from command line
-  int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
+  // first argument: command line option; second argument: default value
+  int nEvent = cmdline.value<int>("-nev",1); 
+  cout << "will run on " << nEvent <<"events"<<endl<<endl; 
   //bool verbose = cmdline.present("-verbose");
 
-  cout << "will run on " << nEvent << " events" << endl;
-
+  bool JETJET = cmdline.present("-jet");
+  bool FULL_EVENT = cmdline.present("-full");
+  bool FULL_EVENT_ITERATIVE = cmdline.present("-iter"); 
+  if(JETJET) {  cout << "Using method: Jet by Jet" << endl<<endl; }
+  if(FULL_EVENT) {  cout << "Using method: Full event" << endl<<endl; }
+  if(FULL_EVENT_ITERATIVE) {  cout << "Using method: Full Iterative" << endl<<endl; }
+  
   // Uncomment to silence fastjet banner
   ClusterSequence::set_fastjet_banner_stream(NULL);
 
@@ -108,6 +116,7 @@ int main (int argc, char ** argv) {
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(25.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
+    /*
     //calculate some angularities
     vector<double> widthSig; widthSig.reserve(jetCollectionSig.getJet().size());
     vector<double> pTDSig;   pTDSig.reserve(jetCollectionSig.getJet().size());
@@ -117,7 +126,7 @@ int main (int argc, char ** argv) {
     }
     jetCollectionSig.addVector("widthSig", widthSig);
     jetCollectionSig.addVector("pTDSig", pTDSig);
-
+    */
     
     //---------------------------------------------------------------------------
     //   jet clustering of signal+background jets
@@ -148,7 +157,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   background subtraction Jet-by-Jet
     //---------------------------------------------------------------------------
-    /*
+    if(JETJET) {
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
     csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
     csSub.setInputParticles(particlesMerged);
@@ -167,31 +176,25 @@ int main (int argc, char ** argv) {
     jmCS.matchJets();
     jmCS.reorderedToTag(jetCollectionCS);
     
-    trw.addCollection("csJetJet",        jetCollectionCS);
-    trw.addCollection("csJetJetRho",         rho);
-    trw.addCollection("csJetJetRhom",        rhom);
+    trw.addCollection("csJet",        jetCollectionCS);
+    trw.addCollection("csJetRho",         rho);
+    trw.addCollection("csJetRhom",        rhom);
 
     std::vector<double> ptPullJet; ptPullJet.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> rapPullJet; rapPullJet.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> phiPullJet; phiPullJet.reserve(jetCollectionSig.getJet().size());
     std::vector<double> mPullJet; mPullJet.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
       ptPullJet.push_back((jetCollectionCS.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCS.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      rapPullJet.push_back((jetCollectionCS.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCS.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
-      phiPullJet.push_back((jetCollectionCS.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCS.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
       mPullJet.push_back((jetCollectionCS.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCS.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPullJet",        ptPullJet);
-    trw.addCollection("rapPullJet",        rapPullJet);
-    trw.addCollection("phiPullJet",        phiPullJet);
     trw.addCollection("mPullJet",        mPullJet);
-    */
+    }
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT
     //---------------------------------------------------------------------------
-    /*
+    if(FULL_EVENT) {
     //We want to substract for full event instead:
     csSubtractorFullEvent csSubFull( 0., .4, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
@@ -216,22 +219,57 @@ int main (int argc, char ** argv) {
     trw.addCollection("csFullRhom",        rhomFull);
 
     std::vector<double> ptPullFull; ptPullFull.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> rapPullFull; rapPullFull.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> phiPullFull; phiPullFull.reserve(jetCollectionSig.getJet().size());
     std::vector<double> mPullFull; mPullFull.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
       ptPullFull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      rapPullFull.push_back((jetCollectionCSFull.getJet()[i].rap()-jetCollectionSig.getJet()[i].rap())/(jetCollectionCSFull.getJet()[i].rap()+jetCollectionSig.getJet()[i].rap()));
-      phiPullFull.push_back((jetCollectionCSFull.getJet()[i].phi()-jetCollectionSig.getJet()[i].phi())/(jetCollectionCSFull.getJet()[i].phi()+jetCollectionSig.getJet()[i].phi()));
       mPullFull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPullFull",        ptPullFull);
-    trw.addCollection("rapPullFull",        rapPullFull);
-    trw.addCollection("phiPullFull",        phiPullFull);
     trw.addCollection("mPullFull",        mPullFull);
-    */
+    }
+    //---------------------------------------------------------------------------
+    //   background subtraction FULL EVENT ITERATIVE
+    //---------------------------------------------------------------------------
+    if(FULL_EVENT_ITERATIVE) {
+    //We want to substract for full event instead:
+    csSubFullEventIterative csSubFull( {0.,0.} , {.2,.2}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFull.setInputParticles(particlesMerged);
+    csSubFull.setMaxEta(3.);
+    csSubFull.setBackground();
+    //This line crashes:
+    fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
+    jetCollection jetCollectionCSFullI(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
+
+    //match CS FULL jets to signal jets
+    jetMatcher jmCSFull(R);
+    jmCSFull.setBaseJets(jetCollectionCSFullI);
+    jmCSFull.setTagJets(jetCollectionSig);
+    jmCSFull.matchJets();
+    jmCSFull.reorderedToTag(jetCollectionCSFullI);
+
+    //Background densities used by constituent subtraction
+    std::vector<double> rhoFull;
+    std::vector<double> rhomFull;
+    rhoFull.push_back(csSubFull.getRho());  
+    rhomFull.push_back(csSubFull.getRhoM()); 
+
+    trw.addCollection("csIter",        jetCollectionCSFullI);
+    trw.addCollection("csIterRho",         rhoFull);
+    trw.addCollection("csIterRhom",        rhomFull);
+
+    std::vector<double> ptPullFullI; ptPullFullI.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPullFullI; mPullFullI.reserve(jetCollectionSig.getJet().size());
+
+    for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
+      ptPullFullI.push_back((jetCollectionCSFullI.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFullI.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      mPullFullI.push_back((jetCollectionCSFullI.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFullI.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+    }
+
+    trw.addCollection("ptPullIter",        ptPullFullI);
+    trw.addCollection("mPullIter",        mPullFullI);
+    }
     //---------------------------------------------------------------------------
     //   Groom the jets
     //---------------------------------------------------------------------------
