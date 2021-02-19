@@ -184,8 +184,8 @@ int main (int argc, char ** argv) {
     std::vector<double> mPullJet; mPullJet.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPullJet.push_back((jetCollectionCS.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCS.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      mPullJet.push_back((jetCollectionCS.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCS.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPullJet.push_back((jetCollectionCS.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionSig.getJet()[i].pt()));
+      mPullJet.push_back((jetCollectionCS.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPullJet",        ptPullJet);
@@ -222,8 +222,8 @@ int main (int argc, char ** argv) {
     std::vector<double> mPullFull; mPullFull.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPullFull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFull.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      mPullFull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFull.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPullFull.push_back((jetCollectionCSFull.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionSig.getJet()[i].pt()));
+      mPullFull.push_back((jetCollectionCSFull.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPullFull",        ptPullFull);
@@ -263,8 +263,8 @@ int main (int argc, char ** argv) {
     std::vector<double> mPullIter; mPullIter.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPullIter.push_back((jetCollectionCSIter.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSIter.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      mPullIter.push_back((jetCollectionCSIter.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSIter.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPullIter.push_back((jetCollectionCSIter.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionSig.getJet()[i].pt()));
+      mPullIter.push_back((jetCollectionCSIter.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPullIter",        ptPullIter);
