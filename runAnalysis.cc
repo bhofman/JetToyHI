@@ -250,14 +250,14 @@ int main (int argc, char ** argv) {
     jmCSFull.reorderedToTag(jetCollectionCSIter);
 
     //Background densities used by constituent subtraction
-    std::vector<double> rhoFull;
-    std::vector<double> rhomFull;
-    rhoFull.push_back(csSubFull.getRho());  
-    rhomFull.push_back(csSubFull.getRhoM()); 
+    std::vector<double> rhoIter;
+    std::vector<double> rhomIter;
+    rhoIter.push_back(csSubFull.getRho());  
+    rhomIter.push_back(csSubFull.getRhoM()); 
 
     trw.addCollection("csIter",        jetCollectionCSIter);
-    trw.addCollection("csIterRho",         rhoFull);
-    trw.addCollection("csIterRhom",        rhomFull);
+    trw.addCollection("csIterRho",         rhoIter);
+    trw.addCollection("csIterRhom",        rhomIter);
 
     std::vector<double> ptPullIter; ptPullIter.reserve(jetCollectionSig.getJet().size());
     std::vector<double> mPullIter; mPullIter.reserve(jetCollectionSig.getJet().size());
