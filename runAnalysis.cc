@@ -240,14 +240,14 @@ int main (int argc, char ** argv) {
     csSubFull.setBackground();
     //This line crashes:
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection jetCollectionCSFullI(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
+    jetCollection jetCollectionCSIter(sorted_by_pt(jet_selector(fullSig.inclusive_jets(25.)))); 
 
     //match CS FULL jets to signal jets
     jetMatcher jmCSFull(R);
-    jmCSFull.setBaseJets(jetCollectionCSFullI);
+    jmCSFull.setBaseJets(jetCollectionCSIter);
     jmCSFull.setTagJets(jetCollectionSig);
     jmCSFull.matchJets();
-    jmCSFull.reorderedToTag(jetCollectionCSFullI);
+    jmCSFull.reorderedToTag(jetCollectionCSIter);
 
     //Background densities used by constituent subtraction
     std::vector<double> rhoFull;
@@ -255,20 +255,20 @@ int main (int argc, char ** argv) {
     rhoFull.push_back(csSubFull.getRho());  
     rhomFull.push_back(csSubFull.getRhoM()); 
 
-    trw.addCollection("csIter",        jetCollectionCSFullI);
+    trw.addCollection("csIter",        jetCollectionCSIter);
     trw.addCollection("csIterRho",         rhoFull);
     trw.addCollection("csIterRhom",        rhomFull);
 
-    std::vector<double> ptPullFullI; ptPullFullI.reserve(jetCollectionSig.getJet().size());
-    std::vector<double> mPullFullI; mPullFullI.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> ptPullIter; ptPullIter.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPullIter; mPullIter.reserve(jetCollectionSig.getJet().size());
 
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPullFullI.push_back((jetCollectionCSFullI.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSFullI.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      mPullFullI.push_back((jetCollectionCSFullI.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSFullI.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPullIter.push_back((jetCollectionCSIter.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCSIter.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      mPullIter.push_back((jetCollectionCSIter.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCSIter.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
-    trw.addCollection("ptPullIter",        ptPullFullI);
-    trw.addCollection("mPullIter",        mPullFullI);
+    trw.addCollection("ptPullIter",        ptPullIter);
+    trw.addCollection("mPullIter",        mPullIter);
     }
     //---------------------------------------------------------------------------
     //   Groom the jets
