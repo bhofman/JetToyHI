@@ -40,7 +40,7 @@ private :
   Int_t kRecursiveAlgo;
   double eventWeight;
 
-
+  fastjet::ClusterSequence cs;  // Make sure cluster does not go out of scope
   
 
   std::vector<fastjet::PseudoJet> fjInputs_;   //ungroomed jets
@@ -68,6 +68,7 @@ private :
 
 public :
   softDropGroomer(double zcut = 0.1, double beta = 0., double r0 = 0.4);
+  ~softDropGroomer(){/*std::cout<<"Destoyed SD Groomer"<<std::endl;*/};
   void setZcut(double c);
   void setBeta(double b);
   void setR0(double r);
@@ -111,6 +112,7 @@ public :
   double RelativePhi(Double_t mphi,Double_t vphi);
 
   Double_t leading_track_pt(fastjet::PseudoJet jet);
+
 };
 
 softDropGroomer::softDropGroomer(double zcut, double beta, double r0)
@@ -275,7 +277,12 @@ Double_t softDropGroomer::leading_track_pt(fastjet::PseudoJet jet)
   }
   return leadingtrack.perp();
 }
-
+/*
+void softDropGroomer::clearMemory()
+{
+  delete cs;
+}
+*/
 std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
 {
    fjOutputs_.reserve(fjInputs_.size());
@@ -295,9 +302,14 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
       fastjet::SelectorIsPureGhost().sift(jet.constituents(), ghosts, particles);
 
       fastjet::JetDefinition jet_def(fastjet::cambridge_algorithm,fastjet::JetDefinition::max_allowable_R);
-      fastjet::ClusterSequence cs(particles, jet_def);
+      //fastjet::ClusterSequence cs(particles, jet_def);
+      
+      // To make sure cs does not go out of scope, needed for jet constituents
+      // Do we cause memory leak here?
+      fastjet::ClusterSequence *cs = new fastjet::ClusterSequence(particles, jet_def);
 
-      std::vector<fastjet::PseudoJet> tempJets = fastjet::sorted_by_pt(cs.inclusive_jets());
+      std::vector<fastjet::PseudoJet> tempJets = fastjet::sorted_by_pt(cs->inclusive_jets());
+
       if(tempJets.size()<1) {
          fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
@@ -377,6 +389,7 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
       if(sd) { delete sd; sd = 0;}
       //   if(reclusterer) { delete reclusterer; sd = 0;}
    }
+
    return fjOutputs_;
 }
 

@@ -94,10 +94,10 @@ public:
 	}
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
-		cout << subtractor_.description() << endl;
+		//cout << subtractor_.description() << endl;
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
-		cout << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
+		//cout << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
 
 		std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
 		return corrected_event;

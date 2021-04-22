@@ -66,6 +66,30 @@ int main (int argc, char ** argv)
     std::vector<fastjet::PseudoJet> particlesSig = pyt.createPythiaEvent();
 
     std::vector<fastjet::PseudoJet> partons = pyt.getPartonList();
+    int moeder_gluon = 0 ; // Hierin houden we bij of moeder een gluon is
+    int dochter_cb = 0 ; //   Is dochter een charm of beauty??
+
+  for(fastjet::PseudoJet p : partons) {
+
+    const int & pdgid = p.user_info<extraInfo>().pdg_id();
+    const int & vtx   = p.user_info<extraInfo>().vertex_number();
+    std::cout<<vtx<<std::endl;
+    if (vtx == -1) {// We zijn een moeder tegengekomen
+      if (pdgid == 21){ // Moeder is ook een gluon 
+       moeder_gluon = 1 ; } // We hebben een moeder gluon gezien
+      else {
+        moeder_gluon = 0 ; } // moeder is geen gluon
+    }
+    if (vtx == -2) { // We zijn een dochter tegengekomen
+      if (abs(pdgid) == 4 || abs(pdgid) == 5){ // dochter is charm of beauty
+        dochter_cb = 1 ; }
+      else{
+        dochter_cb = 0 ; }
+      if (moeder_gluon == 1 && dochter_cb == 1) { continue; }// we hebben wat we willen
+      }
+    }
+
+    if(moeder_gluon==1 && dochter_cb==1){
     for(fastjet::PseudoJet p : partons) {
       const int & pdgid = p.user_info<extraInfo>().pdg_id();
       const int & vtx   = p.user_info<extraInfo>().vertex_number();
@@ -77,6 +101,7 @@ int main (int argc, char ** argv)
       const int & vtx   = p.user_info<extraInfo>().vertex_number();
       fout << p.px() << " " << p.py() << " " << p.pz() << " " << p.m() << " " << pdgid << " " << vtx << "\n";
     }
+  }
     fout << "end\n";
   }
 
