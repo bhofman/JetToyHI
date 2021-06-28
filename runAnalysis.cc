@@ -167,7 +167,7 @@ int main (int argc, char ** argv) {
     jetCollectionSigSDBeta00Z01.addVector("ndropSigSDBeta00Z01", sdgSigBeta00Z01.getNDroppedSubjets());
     jetCollectionSigSDBeta00Z01.addVector("dr12SigSDBeta00Z01",  sdgSigBeta00Z01.getDR12());
 
-    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
+    //SoftDrop grooming classic for signal + bkg subtracted jets (zcut=0.1, beta=0)
     softDropGroomer sdgSigBeta00Z01CS(0.1, 0.0, R);
     jetCollection jetCollectionSigSDBeta00Z01CS(sdgSigBeta00Z01CS.doGrooming(jetCollectionCS_noEmpty));
     jetCollectionSigSDBeta00Z01CS.addVector("zgSigSDBeta00Z01CS",    sdgSigBeta00Z01CS.getZgs());
