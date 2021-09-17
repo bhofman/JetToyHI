@@ -1,5 +1,7 @@
-# Author: Yi Chen (FHead) https://github.com/FHead
-# https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventSource.cc
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Author: Yi Chen (FHead) https://github.com/FHead
+// https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventSource.cc
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "EventSource.hh"
 #include "FastIStringStream.hh"
