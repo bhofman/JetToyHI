@@ -57,6 +57,21 @@ int main (int argc, char ** argv) {
 
   double jetRapMax = 3.0;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
+
+  Angularity width(1.,1.,R);
+  Angularity pTD(0.,2.,R);
+
+  Angularity mr(1.,0.,R);
+  Angularity mr2(2.,0.,R);
+  Angularity r2z(2.,1.,R);
+
+  fastjet::contrib::OnePass_WTA_KT_Axes axes;
+  fastjet::contrib::UnnormalizedMeasure unormbeta(1.0);
+  fastjet::contrib::Nsubjettiness  nSub1_beta1(1, axes, unormbeta);
+  fastjet::contrib::Nsubjettiness  nSub2_beta1(2, axes, unormbeta);
+  fastjet::contrib::Nsubjettiness  nSub3_beta1(3, axes, unormbeta);
+  fastjet::contrib::Nsubjettiness  nSub4_beta1(4, axes, unormbeta);
+  fastjet::contrib::Nsubjettiness  nSub5_beta1(5, axes, unormbeta);
     
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle(-1);
@@ -96,26 +111,41 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollection_Sig(sorted_by_pt(jet_selector(csSig.inclusive_jets(130.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(40.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //---------------------------------------------------------------------------
-    //   background subtraction 
+    //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
     /*
     //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    csSubtractor csSub(R, 1., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
+    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
     csSub.setInputParticles(particlesMerged);
     jetCollection csFullJets(csSub.doSubtraction());
     */
-    
-    //We want to substract for full event iterative:
-    csSubFullEventIterative csSubFull( {2.,2.} , {0.1,.075}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    //We want to substract for full event instead:
+    csSubFullEventIterative csSubFull( {2.,2.} , {.1,0.075}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackgroundGrid();
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection csFullJets(sorted_by_pt(jet_selector(fullSig.inclusive_jets(0.)))); 
-    
+    /*
+    //Background densities used by constituent subtraction
+    std::vector<double> rhoIter;
+    std::vector<double> rhomIter;
+    rhoIter.push_back(csSubFull.getRho());  
+    rhomIter.push_back(csSubFull.getRhoM()); 
+    trw.addCollection("csRho",         rhoIter);
+    trw.addCollection("csRhom",        rhomIter);
+    */
+
+    //match CSFull jets to signal jets
+    jetMatcher jmCSFull(R);
+    jmCSFull.setBaseJets(csFullJets);
+    jmCSFull.setTagJets(jetCollectionSig);
+    jmCSFull.matchJets();
+    jmCSFull.reorderedToTag(csFullJets);
+
     // Make sure our groomed jets have constituents
     std::vector<fastjet::PseudoJet> csFullJetsClean;
     for(fastjet::PseudoJet jet : csFullJets.getJet()) {
@@ -123,75 +153,139 @@ int main (int argc, char ** argv) {
         csFullJetsClean.push_back(jet);
       }
     }
-    jetCollection jetCollectionCS_Sig(csFullJetsClean);
-    
+    /*
     //match CSFull jets to signal jets
     jetMatcher jmCSFull(R);
-    jmCSFull.setBaseJets(jetCollectionCS_Sig);
-    jmCSFull.setTagJets(jetCollection_Sig);
+    jmCSFull.setBaseJets(csFullJetsClean);
+    jmCSFull.setTagJets(jetCollectionSig);
     jmCSFull.matchJets();
-    jmCSFull.reorderedToTag(jetCollectionCS_Sig);
-    
-    /*
-    //Background densities used by constituent subtraction
-    std::vector<double> rhoFull;
-    std::vector<double> rhomFull;
-    rhoFull.push_back(csSubFull.getRho());  
-    rhomFull.push_back(csSubFull.getRhoM()); 
-    trw.addCollection("csFullRho",         rhoFull);
-    trw.addCollection("csFullRhom",        rhomFull);  
+    jmCSFull.reorderedToTag(csFullJetsClean);
     */
-    std::vector<double> ptPull; ptPull.reserve(jetCollection_Sig.getJet().size());
-    std::vector<double> mPull; mPull.reserve(jetCollection_Sig.getJet().size());
-    for (unsigned int i = 0; i < jetCollection_Sig.getJet().size(); i++) {
-      ptPull.push_back((jetCollectionCS_Sig.getJet()[i].pt()-jetCollection_Sig.getJet()[i].pt())/(jetCollectionCS_Sig.getJet()[i].pt()+jetCollection_Sig.getJet()[i].pt()));
-      mPull.push_back((jetCollectionCS_Sig.getJet()[i].m()-jetCollection_Sig.getJet()[i].m())/(jetCollectionCS_Sig.getJet()[i].m()+jetCollection_Sig.getJet()[i].m()));
-    }
+    
+    jetCollection jetCollectionCS_Sig(csFullJetsClean);
+    //jetCollection jetCollectionCS_Sig(jetCollectionSig);
 
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
-    
-    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
-    softDropGroomer sdgSigBeta00Z01_CS(0.1, 0.0, R);
-    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01_CS.doGrooming(csFullJetsClean));
-    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollection_SD(sdgSigBeta00Z01.doGrooming(jetCollection_Sig));
 
+    jetCollection CalculateFor = jetCollectionCS_Sig;
+
+    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
+    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
+    jetCollection jetCollectionCS_SDX(sdgSigBeta00Z01.doGrooming(jetCollectionCS_Sig));
+    softDropGroomer sdgSigBeta00Z01SIG(0.1, 0.0, R);
+    jetCollection jetCollectionSIG_SD(sdgSigBeta00Z01SIG.doGrooming(jetCollectionSig));
+
+    jetCollectionCS_SDX.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
+    jetCollectionCS_SDX.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
+    jetCollectionCS_SDX.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
+    
     //match CSFull jets to signal jets
     jetMatcher jmCSFullSD(R);
-    jmCSFullSD.setBaseJets(jetCollectionCS_SD);
-    jmCSFullSD.setTagJets(jetCollection_SD);
+    jmCSFullSD.setBaseJets(jetCollectionCS_SDX);
+    jmCSFullSD.setTagJets(jetCollectionSIG_SD);
     jmCSFullSD.matchJets();
-    jmCSFullSD.reorderedToTag(jetCollectionCS_SD);
+    jmCSFullSD.reorderedToTag(jetCollectionCS_SDX);
     
-    std::vector<double> ptPull_SD; ptPull_SD.reserve(jetCollection_SD.getJet().size());
-    std::vector<double> mPull_SD; mPull_SD.reserve(jetCollection_SD.getJet().size());
-    for (unsigned int i = 0; i < jetCollection_SD.getJet().size(); i++) {
-      ptPull_SD.push_back((jetCollectionCS_SD.getJet()[i].pt()-jetCollection_SD.getJet()[i].pt())/(jetCollectionCS_SD.getJet()[i].pt()+jetCollection_SD.getJet()[i].pt()));
-      mPull_SD.push_back((jetCollectionCS_SD.getJet()[i].m()-jetCollection_SD.getJet()[i].m())/(jetCollectionCS_SD.getJet()[i].m()+jetCollection_SD.getJet()[i].m()));
+    // Make sure our groomed jets have constituents
+    std::vector<fastjet::PseudoJet> csFullJetsCleanX;
+    for(fastjet::PseudoJet jet : jetCollectionCS_SDX.getJet()) {
+      if(jet.has_constituents()){
+        csFullJetsCleanX.push_back(jet);
+      }
     }
+    jetCollection jetCollectionCS_SD(csFullJetsCleanX);
+  
+    jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
+    jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
+    jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
     
-    trw.addCollection("SIG_",        jetCollection_Sig);
-    trw.addCollection("csSIG_",        jetCollectionCS_Sig);
+    //calculate some angularities
+    //std::cout << "calc angularities groomed jets" << std::endl;
+    vector<double> SD_width;    SD_width.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_pTD;      SD_pTD.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_mr;         SD_mr.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_mr2;        SD_mr2.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_r2z;        SD_r2z.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau1;       SD_tau1.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau2;       SD_tau2.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau3;       SD_tau3.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau4;       SD_tau4.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau5;       SD_tau5.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau2tau1;   SD_tau2tau1.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_tau3tau2;   SD_tau3tau2.reserve(jetCollectionCS_SD.getJet().size());
+    
+    //need to get list of constituents of groomed jets
+    for(PseudoJet jet : jetCollectionCS_SD.getJet()) {
+      SD_width.push_back(width.result(jet));
+      SD_pTD.push_back(pTD.result(jet));
+      SD_mr.push_back(mr.result(jet));
+      SD_mr2.push_back(mr2.result(jet));
+      SD_r2z.push_back(r2z.result(jet));
+      SD_tau1.push_back(nSub1_beta1(jet));
+      SD_tau2.push_back(nSub2_beta1(jet));
+      SD_tau3.push_back(nSub3_beta1(jet));
+      SD_tau4.push_back(nSub4_beta1(jet));
+      SD_tau5.push_back(nSub5_beta1(jet));
 
-    trw.addCollection("SD_",      jetCollection_SD);
-    trw.addCollection("csSD_",      jetCollectionCS_SD);
+      if (nSub1_beta1(jet) != 0){
+        SD_tau2tau1.push_back(nSub2_beta1(jet)/nSub1_beta1(jet));
+      }
+      if (nSub1_beta1(jet) == 0){
+        SD_tau2tau1.push_back(-999);
+      }
+      if (nSub2_beta1(jet) != 0){
+        SD_tau3tau2.push_back(nSub3_beta1(jet)/nSub2_beta1(jet));
+      }
+      if (nSub2_beta1(jet) == 0){
+        SD_tau3tau2.push_back(-999);
+      }
+    }
 
-    trw.addCollection("ptPull",        ptPull);
-    trw.addCollection("mPull",        mPull);
+    jetCollectionCS_SD.addVector("SD_width", SD_width);
+    jetCollectionCS_SD.addVector("SD_ptd", SD_pTD);
+    jetCollectionCS_SD.addVector("SD_mr", SD_mr);
+    jetCollectionCS_SD.addVector("SD_mr2", SD_mr2);
+    jetCollectionCS_SD.addVector("SD_r2z", SD_r2z);
+    jetCollectionCS_SD.addVector("SD_tau1", SD_tau1);
+    jetCollectionCS_SD.addVector("SD_tau2", SD_tau2);
+    jetCollectionCS_SD.addVector("SD_tau3", SD_tau3);
+    jetCollectionCS_SD.addVector("SD_tau4", SD_tau4);
+    jetCollectionCS_SD.addVector("SD_tau5", SD_tau5);
+    jetCollectionCS_SD.addVector("SD_tau2tau1", SD_tau2tau1);
+    jetCollectionCS_SD.addVector("SD_tau3tau2", SD_tau3tau2);
 
-    trw.addCollection("ptPull_SD",        ptPull_SD);
-    trw.addCollection("mPull_SD",        mPull_SD);
+    //---------------------------------------------------------------------------
+    //   Dynamical grooming
+    //---------------------------------------------------------------------------
+    
+    dyGroomer dygTDSig(2);
+    jetCollection jetCollectionSigDYTD(dygTDSig.doGrooming(CalculateFor));
+    trw.addCollection("kappa_TD",        dygTDSig.getKappas());
+    trw.addCollection("zg_TD",        dygTDSig.getZgs());
+    trw.addCollection("dR_TD",        dygTDSig.getDR12());
+    
+    dyGroomer dygKTDSig(1);
+    jetCollection jetCollectionSigDYKTD(dygKTDSig.doGrooming(CalculateFor));
+    trw.addCollection("kappa_KTD",        dygKTDSig.getKappas());
+    trw.addCollection("zg_KTD",        dygKTDSig.getZgs());
+    trw.addCollection("dR_KTD",        dygKTDSig.getDR12());
+    
+    dyGroomer dygzDSig(0.1);
+    jetCollection jetCollectionSigDYzD(dygzDSig.doGrooming(CalculateFor));
+    trw.addCollection("kappa_zD",        dygzDSig.getKappas());
+    trw.addCollection("zg_zD",        dygzDSig.getZgs());
+    trw.addCollection("dR_zD",        dygzDSig.getDR12());
     
     //---------------------------------------------------------------------------
-    //   pt of constituents
+    //  Constituents
     //---------------------------------------------------------------------------
-    
+    /*
     std::vector<double>  cons_sig_pt, cons_sigCS_pt, cons_SD_pt, cons_SDCS_pt;
     std::vector<double>  cons_sig_dr, cons_sigCS_dr, cons_SD_dr, cons_SDCS_dr;
 
-    for(fastjet::PseudoJet jet : jetCollection_Sig.getJet()) {
+    for(fastjet::PseudoJet jet : jetCollectionSig.getJet()) {
       if(jet.has_constituents()) {
         for(fastjet::PseudoJet constituent : jet.constituents()) {
           cons_sig_pt.push_back(constituent.perp());
@@ -211,7 +305,7 @@ int main (int argc, char ** argv) {
       }
     }
     
-    for(fastjet::PseudoJet jet : jetCollection_SD.getJet()) {
+    for(fastjet::PseudoJet jet : jetCollectionSIG_SD.getJet()) {
       if(jet.has_constituents()) {
         for(fastjet::PseudoJet constituent : jet.constituents()) {
           cons_SD_pt.push_back(constituent.perp());
@@ -239,14 +333,20 @@ int main (int argc, char ** argv) {
     trw.addCollection("cons_sig_dr",        cons_sig_dr);
     trw.addCollection("cons_sigCS_dr",        cons_sigCS_dr);
     trw.addCollection("cons_SD_dr",        cons_SD_dr);
-    trw.addCollection("cons_SDCS_dr",        cons_SDCS_dr);    
-    
+    trw.addCollection("cons_SDCS_dr",        cons_SDCS_dr);
+    */
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
+
     //Give variable we want to write out to treeWriter.
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
+    //trw.addCollection("eventWeight",   eventWeight);
+    //trw.addCollection("test",        jetCollectionCS_Sig);
+    trw.addCollection("SD_",      jetCollectionCS_SD);
+    
+  
     trw.fillTree();
 
   }//event loop
@@ -257,7 +357,7 @@ int main (int argc, char ** argv) {
 
   TTree *trOut = trw.getTree();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetCHECK.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetOBS.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();
@@ -266,5 +366,3 @@ int main (int argc, char ** argv) {
     (chrono::steady_clock::now() - start_time).count() / 1000.0;
   cout << "runFromFile: " << time_in_seconds << endl;
 }
-
-// 
