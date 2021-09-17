@@ -1,3 +1,6 @@
+# Author: Yi Chen (FHead) https://github.com/FHead
+# https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventMixer.hh
+
 #ifndef __EVENTMIXER_HH__
 #define __EVENTMIXER_HH__
 
@@ -34,6 +37,8 @@ public:
   /// Returns true if it successfully produced the event, false otherwise.
   bool next_event(); 
 
+  const EventList &get_hard_list() {return _hard->List;}
+
   /// returns a reference to vector of particles in the last event
   /// that was read in
   const std::vector<fastjet::PseudoJet> & particles() const {return _particles;}
@@ -42,8 +47,6 @@ public:
   double weight() {return _hard_event_weight * _pu_event_weight;}
   double pu_weight() {return _pu_event_weight;}
   double hard_weight() {return _hard_event_weight;}
-  double productionX() {return _posX;}
-  double productionY() {return _posY;}
 
   /// returns the number of pileup events generated in the last mixed event 
   int npu() const {return _npu;}
@@ -67,6 +70,7 @@ public:
 private:
   CmdLine * _cmdline;
   std::string _hard_name, _pileup_name;
+  std::string _hard_type, _pileup_type;
   fastjet::SharedPtr<EventSource> _hard, _pileup;
   int _npu;
   // GSLRandom _rng;
@@ -75,7 +79,6 @@ private:
 
   std::vector<fastjet::PseudoJet> _particles;
   double _hard_event_weight, _pu_event_weight;
-  double _posX, _posY;
 };
 
 #endif  // __EVENTMIXER_HH__

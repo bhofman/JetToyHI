@@ -1,3 +1,6 @@
+# Author: Yi Chen (FHead) https://github.com/FHead
+# https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventMixer.cc
+
 #include "EventMixer.hh"
 #include "PU14.hh"
 #include "helpers.hh"
@@ -8,8 +11,10 @@ using namespace std;
 //----------------------------------------------------------------------
 EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
 
-  _hard_name = _cmdline->value<string>("-hard");
+  _hard_name   = _cmdline->value<string>("-hard");
   _pileup_name = _cmdline->value<string>("-pileup", "");
+  _hard_type   = _cmdline->value<string>("-hardtype", "PU14");
+  _pileup_type = _cmdline->value<string>("-pileuptype", "PU14");
 
   // setting the multiplicity of pileup events (background HI)
   //
@@ -31,14 +36,16 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
     set_chs_rescaling_factor(1.0); // this effectively turns off CHS
   }
 
-  _hard  .reset(new EventSource(_hard_name  ));
+  _hard  .reset(new EventSource(_hard_name  , _hard_type));
+  _hard->Recycle = false;
 
   if (_pileup_name.empty()){
     cerr << "INFO: no background requested" << endl;
     _pileup.reset();
     _npu=0;
   } else {
-    _pileup.reset(new EventSource(_pileup_name));
+    _pileup.reset(new EventSource(_pileup_name, _pileup_type));
+    _pileup->Recycle = true;
   }
 }
 
@@ -49,15 +56,14 @@ bool EventMixer::next_event() {
   _pu_event_weight = 1;
   
   // first get the hard event
-  if (! _hard->append_next_event(_particles,_hard_event_weight,_posX,_posY,0)) return false;
+  if (! _hard->append_next_event(_particles,_hard_event_weight,0)) return false;
 
   unsigned hard_size = _particles.size();
 
   // add pileup if available
   if (_pileup.get()){
     for (int i = 1; i <= _npu; i++) {
-      double dumX, dumY;
-      if (! _pileup->append_next_event(_particles,_pu_event_weight,dumX,dumY,i)) return false;
+      if (! _pileup->append_next_event(_particles,_pu_event_weight,i)) return false;
     }
   }
 
