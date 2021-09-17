@@ -1,5 +1,7 @@
-# Author: Yi Chen (FHead) https://github.com/FHead
-# https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventMixer.cc
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Author: Yi Chen (FHead) https://github.com/FHead
+// https://github.com/FHead/JetToyHI/blob/49d264cc304602341e56a315f0a9dbd768016f57/PU14/EventMixer.cc
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "EventMixer.hh"
 #include "PU14.hh"
