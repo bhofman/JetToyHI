@@ -92,7 +92,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(10.))));
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(50.))));
 
     //calculate some angularities
     vector<double> widthSig; widthSig.reserve(jetCollectionSig.getJet().size());
