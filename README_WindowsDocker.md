@@ -39,6 +39,7 @@ Open WSL and type:
 
 ```sh
 DISPLAY=ipadress:0.0
+echo DISPLAY=$DISPLAY >> ~/.bashrc
 ```
 
 where ipadress is the adress you found in the Xming log, so e.g. ```DISPLAY=1.2.3.4:0.0```
