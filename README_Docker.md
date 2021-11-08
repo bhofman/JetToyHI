@@ -3,6 +3,7 @@
 ## Windows Subsystem for Linux (WSL)
 You must be running Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11.
 
+## Using JetToyHI
 ```sh
 scripts/mkcxx.pl -f -s -1 -r -8 '-IPU14' -l '-LPU14 -lPU14 -lz'
 make
