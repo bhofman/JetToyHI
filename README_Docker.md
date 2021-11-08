@@ -1,78 +1,9 @@
-# Setting up software and run jet analysis with JetToyHI framework
+# Setting up software and run jet analysis with JetToyHI framework with Docker
 
-## Prerequisites
-
-If you are using mac or linux, the steps are relatively straightforward.  For windows machines: https://www.virtualbox.org/
-
-## JetToyHI installation
-
-### Install ROOT
-Root dependencies:
-```sh
-sudo apt-get install dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
-libxft-dev libxext-dev python libssl-dev
-```
-Then download root: https://root.cern/releases/release-62206/
+## Windows Subsystem for Linux (WSL)
+You must be running Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11.
 
 ```sh
-tar -xzvf root_VERSION.tar.gz
-source root/bin/thisroot.sh 
-```
-
-### Install PYTHIA8
-```sh
-wget http://home.thep.lu.se/~torbjorn/pythia8/pythia8235.tgz
-tar xvfz pythia8235.tgz
-cd pythia8235
-./configure
-make
-PYTHIA=$PWD
-cd ..
-```
-
-### Install fastjet
-
-```sh
-curl -O http://fastjet.fr/repo/fastjet-3.3.2.tar.gz 
-tar zxvf fastjet-3.3.2.tar.gz
-cd fastjet-3.3.2/
-
-./configure --prefix=$PWD/../fastjet332-install
-make
-make check
-make install
-FASTJET=$PWD/../fastjet332-install
-cd ..
-
-export FJ_CONTRIB_VER=1.041 
-curl -Lo source.tar.gz http://fastjet.hepforge.org/contrib/downloads/fjcontrib-"$FJ_CONTRIB_VER".tar.gz
-tar xzf source.tar.gz
-cd fjcontrib-"$FJ_CONTRIB_VER"
-./configure --fastjet-config=$FASTJET/bin/fastjet-config --prefix=`$FASTJET/bin/fastjet-config --prefix`
-make 
-make install 
-make fragile-shared #make shared library
-make fragile-shared-install
-cd ..
-```
-
-### Jet workshop software
-```sh
-git clone https://github.com/mverwe/JetToyHI.git
-cd JetToyHI
-git pull --rebase origin forbsc
-
-echo `$FASTJET/bin/fastjet-config --prefix` > .fastjet
-echo $PYTHIA > .pythia8
-```
-
-```sh
-cd PU14
-echo `$FASTJET/bin/fastjet-config --prefix` > .fastjet
-./mkmk
-make
-cd ..
-
 scripts/mkcxx.pl -f -s -1 -r -8 '-IPU14' -l '-LPU14 -lPU14 -lz'
 make
 ```
@@ -90,23 +21,12 @@ TBrowser b
 ```
 Click on `jetTree` and play around.
 
-### Visual Studio Live Share
-
-Install Visual Studio Code.
-Launch VS Code Quick Open (Ctrl+P), paste the following command:
-```sh
-ext install MS-vsliveshare.vsliveshare-pack
-```
- and press enter. 
- Login with github to share with other people.
-
 ## Contribute
 * If you want to contribute to this code you need to have a github account. Go here to do so: https://github.com/join.
 * Fork the original repository. Go to: https://github.com/mverwe/JetToyHI and click 'Fork' in the upper right corner.
 * Instead of cloning the original repository as shown above, clone your own.
 * After committing your changes to your own branch, push them to your own fork. Don't know how to do this, ask your colleages or use google which might bring you here https://services.github.com/on-demand/downloads/github-git-cheat-sheet/
 * Do a pull request once you have finished your developements.
-
 
 ## Samples
 Event samples can be found in the jet quenching CERNBOX:
