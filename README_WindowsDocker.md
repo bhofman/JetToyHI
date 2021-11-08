@@ -11,7 +11,7 @@ To install WSL in windows open Powershell and type:
 wsl --install
 ```
 
-After WSL has finished installing you will need to reboot your pc. After you have rebooted open WSL and follow the stept to setup your Linux environment inside of WSL. If the installation was succesful you will have a terminal that behaves as a Linux environment.
+After WSL has finished installing you will need to reboot your pc. After you have rebooted, open WSL and follow the steps to setup your Linux environment inside of WSL. If the installation was succesful you will have a terminal that behaves as a Linux environment.
 
 ### Docker
 Install docker using the instuctions on the website: https://docs.docker.com/desktop/windows/install/
@@ -31,6 +31,7 @@ This message shows that your installation appears to be working correctly.
 
 ### Xming
 In order to make docker work with your graphics adapter (so you can see nice plots) we need to use Xming. You can download Xming from: https://sourceforge.net/projects/xming/
+
 To use Xming we need to know the relevant IP adress. After launching Xming there should be a Xming logo in your system tray. Rightclick the icon and press View Log.
 You should now look for ```XdmcpRegisterConnection: newAddress``` in the 10th line. This is followed by an IP adress, we will need this.
 
