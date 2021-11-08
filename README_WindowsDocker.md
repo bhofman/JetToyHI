@@ -1,7 +1,7 @@
 # Setting up software and run jet analysis with JetToyHI framework with Docker
 
 ## Windows 
-To run this software easily with Windows we need 3 pieces of software: WSL, Docker and Xming.
+To run the JetToyHI software with Windows we need 3 pieces of software: WSL, Docker and Xming.
 
 ### WSL
 Windows can not run the needed software natively. Therefore we will use some tricks to emulate a Linux environment. To do this we will use Windows Subsystem for Linux (WSL). You must be running Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 to use WSL. 
