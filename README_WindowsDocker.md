@@ -42,8 +42,9 @@ DISPLAY=ipadress:0.0
 
 where ipadress is the adress you found in the Xming log, so e.g. ```DISPLAY=1.2.3.4:0.0```
 
-### Running the code
+## Running the code
 We will use a pre-configured docker container: https://hub.docker.com/repository/docker/bashofman/jettoyhi
+
 To download this container do:
 
 ```sh
