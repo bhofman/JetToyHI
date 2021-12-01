@@ -31,6 +31,7 @@ private :
   std::map<std::string,std::vector<int>  > intMaps_;
   std::map<std::string,std::vector<double>  > doubleMaps_;
   std::map<std::string,std::vector<std::vector<double> >  > doubleVectorMaps_;
+  std::map<std::string,std::vector<std::vector<int> >  > doubleIntMaps_;
 
 public :
   treeWriter(const char *treeName = "treeOut");
@@ -146,6 +147,8 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
   std::vector<std::vector<double>> constEta;
   std::vector<std::vector<double>> constPhi;
   std::vector<std::vector<double>> constM;
+  std::vector<std::vector<double>> constRap;
+  std::vector<std::vector<double>> constPDG;
   //if(writeConst) {
   //  constPt.clear();
   //  constPt.reserve(v.size());
@@ -164,6 +167,8 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
       std::vector<double> etaConst;
       std::vector<double> phiConst;
       std::vector<double> mConst;
+      std::vector<double> Rapconst;
+      std::vector<double> pdgconst;   pdgconst.reserve(v.size());
       
       std::vector<fastjet::PseudoJet> particles, ghosts;
       fastjet::SelectorIsPureGhost().sift(jet.constituents(), ghosts, particles);
@@ -172,11 +177,17 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
         etaConst.push_back(p.eta());
         phiConst.push_back(p.phi());
         mConst.push_back(p.m());
+        Rapconst.push_back(p.rap());
+        const int pdgid = p.user_info<PU14>().pdg_id();
+        pdgconst.push_back((double)pdgid);
       }
       constPt.push_back(ptConst);
       constEta.push_back(etaConst);
       constPhi.push_back(phiConst);
       constM.push_back(mConst);
+      constRap.push_back(Rapconst);
+      constPDG.push_back(pdgconst);
+      
     }
   }
 
@@ -185,6 +196,7 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
   addDoubleCollection(name + "Phi", phi);
   addDoubleCollection(name + "M",   m);
   addDoubleCollection(name + "Area",   area);
+
 
   if(writeConst) {
     //addDoubleVectorCollection(name + "ConstPt", constPt);
@@ -207,7 +219,18 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
     doubleVectorMaps_[branchName] = constM;
     if(!treeOut_->GetBranch(branchName.c_str()))
       treeOut_->Branch(branchName.c_str(),&doubleVectorMaps_[branchName]);
-    
+      
+    branchName = name + "ConstPDG";
+    doubleVectorMaps_[branchName] = constPDG;
+    if(!treeOut_->GetBranch(branchName.c_str()))
+      treeOut_->Branch(branchName.c_str(),&doubleVectorMaps_[branchName]);
+      
+    branchName = name + "ConstRap";
+    doubleVectorMaps_[branchName] = constRap;
+    if(!treeOut_->GetBranch(branchName.c_str()))
+      treeOut_->Branch(branchName.c_str(),&doubleVectorMaps_[branchName]);
+
+
   }
 }
 
@@ -218,7 +241,7 @@ void treeWriter::addPartonCollection(std::string name, const std::vector<fastjet
   std::vector<double> eta;   eta.reserve(v.size());
   std::vector<double> phi;   phi.reserve(v.size());
   std::vector<double> m;     m.reserve(v.size());
-  std::vector<int>    pdg;   pdg.reserve(v.size());
+  std::vector<double>    pdg;   pdg.reserve(v.size());
 
   for(const fastjet::PseudoJet p: v) {
     pt.push_back(p.pt());
@@ -226,14 +249,14 @@ void treeWriter::addPartonCollection(std::string name, const std::vector<fastjet
     phi.push_back(p.phi());
     m.push_back(p.m());
     const int & pdgid = p.user_info<PU14>().pdg_id();
-    pdg.push_back(pdgid);
+    pdg.push_back((double)pdgid);
   }
 
   addDoubleCollection(name + "Pt",  pt);
   addDoubleCollection(name + "Eta", eta);
   addDoubleCollection(name + "Phi", phi);
   addDoubleCollection(name + "M",   m);
-  addIntCollection(name + "PDG",   pdg);
+  addDoubleCollection(name + "PDG",   pdg);
   
 }
 
