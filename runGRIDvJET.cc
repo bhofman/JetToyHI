@@ -96,7 +96,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollection_Sig(sorted_by_pt(jet_selector(csSig.inclusive_jets(40.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollection_Sig(sorted_by_pt(jet_selector(csSig.inclusive_jets(60.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //---------------------------------------------------------------------------
     //   background subtraction 
