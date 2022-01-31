@@ -25,11 +25,8 @@
 #include "include/csSubtractor.hh"
 #include "include/csSubFullEventIterative.hh"
 
-//hsdjdfkjfdwkjlsdafklnjsdfakljsdfakjlsdsdffsdsfdsfd
 using namespace std;
 using namespace fastjet;
-
-// ./runAnalysis -hard samples/PythiaEventsTune14PtHat120.pu14 -pileup samples/ThermalEventsMult12000PtAv0.70.pu14 -nev 10
 
 int main (int argc, char ** argv) {
 
@@ -39,6 +36,8 @@ int main (int argc, char ** argv) {
   // inputs read from command line
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   //bool verbose = cmdline.present("-verbose");
+
+  int user_pt = cmdline.value<int>("-pt",10); 
 
   cout << "will run on " << nEvent << " events" << endl;
 
@@ -56,7 +55,6 @@ int main (int argc, char ** argv) {
   GhostedAreaSpec ghost_spec(ghostRapMax, active_area_repeats, ghost_area);
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
-  //fastjet::JetDefinition jet_def_ca(cambridge_algorithm, 999.); // Should no longer be needed
 
   double jetRapMax = 3.0;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
@@ -114,74 +112,22 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
 
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(40.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
-    //---------------------------------------------------------------------------
-    //   background subtraction FULL EVENT ITERATIVE
-    //---------------------------------------------------------------------------
-    /*
-    //run jet-by-jet constituent subtraction on mixed (hard+UE) event
-    csSubtractor csSub(R, 0., -1, 0.005,ghostRapMax,jetRapMax);  // Rjet, alpha, rParam, ghA, ghostRapMax, jetRapMax
-    csSub.setInputParticles(particlesMerged);
-    jetCollection csFullJets(csSub.doSubtraction());
-    
-    //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {2.} , {.25}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
-    csSubFull.setInputParticles(particlesMerged);
-    csSubFull.setMaxEta(3.);
-    csSubFull.setBackgroundGrid();
-    fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection csFullJets(sorted_by_pt(jet_selector(fullSig.inclusive_jets(0.)))); 
-    
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> csFullJetsClean;
-    for(fastjet::PseudoJet jet : csFullJets.getJet()) {
-      if(jet.has_constituents()){
-        csFullJetsClean.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionCS_Sig(csFullJetsClean);
-    
-    //match CSFull jets to signal jets
-    jetMatcher jmCSFull(R);
-    jmCSFull.setBaseJets(csFullJetsClean);
-    jmCSFull.setTagJets(jetCollectionSig);
-    jmCSFull.matchJets();
-    jmCSFull.reorderedToTag(csFullJetsClean);
-    */
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
-    // jetCollectionSig
-    // csFullJets
-
-    //jetCollection CalculateFor = csFullJetsClean;
-    //jetCollection CalculateFor = jetCollectionCS_Sig;
-
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
     softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
     jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionSig));
-    /*
-    softDropGroomer sdgSigBeta00Z01SIG(0.1, 0.0, R);
-    jetCollection jetCollectionSIG_SD(sdgSigBeta00Z01SIG.doGrooming(jetCollectionSig));
-    */
+
     //match CSFull jets to signal jets
     jetMatcher jmCSFullSD(R);
     jmCSFullSD.setBaseJets(jetCollectionCS_SD);
     jmCSFullSD.setTagJets(jetCollectionSig);
     jmCSFullSD.matchJets();
     jmCSFullSD.reorderedToTag(jetCollectionCS_SD);
-/*
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> csFullJetsCleanX;
-    for(fastjet::PseudoJet jet : jetCollectionCS_SDX.getJet()) {
-      if(jet.has_constituents()){
-        csFullJetsCleanX.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionCS_SD(csFullJetsCleanX);
-*/  
-    
+
     jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
     jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
     jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
@@ -266,67 +212,8 @@ int main (int argc, char ** argv) {
     trw.addCollection("dR_zD",        dygzDSig.getDR12());
 
     //---------------------------------------------------------------------------
-    //  Constituents
-    //---------------------------------------------------------------------------
-    /*
-    std::vector<double>  cons_sig_pt, cons_sigCS_pt, cons_SD_pt, cons_SDCS_pt;
-    std::vector<double>  cons_sig_dr, cons_sigCS_dr, cons_SD_dr, cons_SDCS_dr;
-
-    for(fastjet::PseudoJet jet : jetCollectionSig.getJet()) {
-      if(jet.has_constituents()) {
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-          cons_sig_pt.push_back(constituent.perp());
-          double DeltaR = std::sqrt(constituent.squared_distance(jet));
-          cons_sig_dr.push_back(DeltaR);
-        }
-      }
-    } 
-    
-    for(fastjet::PseudoJet jet : jetCollectionCS_Sig.getJet()) {
-      if(jet.has_constituents()) {
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-          cons_sigCS_pt.push_back(constituent.perp());
-          double DeltaR = std::sqrt(constituent.squared_distance(jet));
-          cons_sigCS_dr.push_back(DeltaR);
-        }
-      }
-    }
-    
-    for(fastjet::PseudoJet jet : jetCollectionSIG_SD.getJet()) {
-      if(jet.has_constituents()) {
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-          cons_SD_pt.push_back(constituent.perp());
-          double DeltaR = std::sqrt(constituent.squared_distance(jet));
-          cons_SD_dr.push_back(DeltaR);
-        }
-      }
-    }
-
-    for(fastjet::PseudoJet jet : jetCollectionCS_SD.getJet()) {
-      if(jet.has_constituents()) {
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-          cons_SDCS_pt.push_back(constituent.perp());
-          double DeltaR = std::sqrt(constituent.squared_distance(jet));
-          cons_SDCS_dr.push_back(DeltaR);
-        }
-      }
-    }
-
-    trw.addCollection("cons_sig_pt",        cons_sig_pt);
-    trw.addCollection("cons_sigCS_pt",        cons_sigCS_pt);
-    trw.addCollection("cons_SD_pt",        cons_SD_pt);
-    trw.addCollection("cons_SDCS_pt",        cons_SDCS_pt);
-
-    trw.addCollection("cons_sig_dr",        cons_sig_dr);
-    trw.addCollection("cons_sigCS_dr",        cons_sigCS_dr);
-    trw.addCollection("cons_SD_dr",        cons_SD_dr);
-    trw.addCollection("cons_SDCS_dr",        cons_SDCS_dr);
-    s*/
-    //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
-
-
     //Give variable we want to write out to treeWriter.
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
