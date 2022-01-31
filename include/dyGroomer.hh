@@ -46,7 +46,7 @@ public :
   std::vector<double> getKappas() const;
   std::vector<double> getTau21() const;
   std::vector<double> getTau32() const;
-  double getKappa(double pt, double theta, double z);
+  double getKappa(double jetpt, double pt, double theta, double z);
   std::vector<fastjet::PseudoJet> doGrooming(jetCollection &c);
   std::vector<fastjet::PseudoJet> doGrooming(std::vector<fastjet::PseudoJet> v);
   std::vector<fastjet::PseudoJet> doGrooming();
@@ -108,11 +108,9 @@ std::vector<fastjet::PseudoJet> dyGroomer::doGrooming(std::vector<fastjet::Pseud
    return doGrooming();
 }
 
-double dyGroomer::getKappa(double pt, double theta, double z)
+double dyGroomer::getKappa(double jetpt, double pt, double theta, double z)
 {  
-   double kappa = (z * (1-z) * pt * pow(theta,a_));
-  // double kappa = 1/(z * pt * pow(theta,a_));
-  //ma double kappa = 1/(z * pt * pow(theta,a_));
+   double kappa = (1. / jetpt) * (z * (1-z) * pt * pow(theta,a_));
    return kappa;
 }
 
@@ -123,8 +121,6 @@ std::vector<fastjet::PseudoJet> dyGroomer::doGrooming()
    dr12_.reserve(fjInputs_.size());
    drBranches_.reserve(fjInputs_.size());
    kappa_.reserve(fjInputs_.size());
-   //  tau21_.reserve(fjInputs_.size());
-   //   tau32_.reserve(fjInputs_.size());
 
    int ijet = -1;
 
@@ -137,8 +133,6 @@ std::vector<fastjet::PseudoJet> dyGroomer::doGrooming()
          dr12_.push_back(-1.);
          drBranches_.push_back(-1.);
          kappa_.push_back(-1.);
-         //tau21_.push_back(-1);
-         //tau32_.push_back(-1);
          continue;
       }
       
@@ -159,96 +153,73 @@ std::vector<fastjet::PseudoJet> dyGroomer::doGrooming()
          dr12_.push_back(-1.);
          drBranches_.push_back(-1.);
          kappa_.push_back(-1.);
-         //tau21_.push_back(-1);
-         //tau32_.push_back(-1);
          continue;
       }
 
       fastjet::PseudoJet CurrentJet = tempJets[0];
       fastjet::PseudoJet piece1, piece2;
-      //double min_kappa = 1e8;
       double max_kappa = -1;
-      //double zg = -1.;
-      //double deltaR = -1;
       double kappa = -1;
-      //double pt = -1;
       int ndrop = 0;
       int current_in_ca_tree = -1; // (history) index of the current particle in the C/A tree
 
       // now recurse into the jet's structure to find the maximum hardness/ minimum inverse hardness
-  while (CurrentJet.has_parents(piece1, piece2)) {
+      while (CurrentJet.has_parents(piece1, piece2)) {
 
-     if (CurrentJet.pt2() <= 0) break;
+        if (CurrentJet.pt2() <= 0) break;
 
-    // if(piece1.pt() + piece2.pt() > 0 && piece1.E()>0. && piece2.E()>0. && piece1.m()>0. && piece2.m()>0.){
-     if(piece1.pt() + piece2.pt() > 0 && piece1.E()>0. && piece2.E()>0.){
-     double pt = piece1.pt() + piece2.pt();
-     double zg = min(piece1.pt(), piece2.pt()) / pt;
-     double deltaR = piece1.delta_R(piece2);
-     kappa = getKappa(pt,deltaR,zg);
+        if(piece1.pt() + piece2.pt() > 0 && piece1.E()>0. && piece2.E()>0.){
+           double pt = piece1.pt() + piece2.pt();
+           double jetpt = jet.pt();
+           double zg = min(piece1.pt(), piece2.pt()) / pt;
+           double deltaR = piece1.delta_R(piece2);
+           kappa = getKappa(jetpt,pt,deltaR,zg);
 
-     //if(kappa < min_kappa) {
-     if(kappa > max_kappa) {
-        //min_kappa = kappa;
-        max_kappa = kappa;
-        current_in_ca_tree = CurrentJet.cluster_hist_index();
+           if(kappa > max_kappa) {
+                 max_kappa = kappa;
+                 current_in_ca_tree = CurrentJet.cluster_hist_index();
+            }
+            else ndrop++;
+         }
+
+       if(piece1.pt() > piece2.pt())
+         CurrentJet = piece1;
+       else
+         CurrentJet = piece2;
+
       }
-      else ndrop++;
-    }
 
-    if(piece1.pt() > piece2.pt())
-      CurrentJet = piece1;
-    else
-      CurrentJet = piece2;
+      if(current_in_ca_tree >= 0){
+      fastjet::PseudoJet groomed_jet = tempJets_two[cs_history[current_in_ca_tree].jetp_index];
 
-  }
+      // Obtain the (z,pT,theta) of the selected splitting
+      fastjet::PseudoJet daughter1, daughter2;
+      groomed_jet.has_parents(daughter1, daughter2);
 
-    if(current_in_ca_tree >= 0){
-    fastjet::PseudoJet groomed_jet = tempJets_two[cs_history[current_in_ca_tree].jetp_index];
+      if (daughter1.pt() + daughter2.pt() > 0 && daughter1.E()>0. && daughter2.E()>0){
+        double pt = daughter1.pt() + daughter2.pt();
+        double jetpt = jet.pt();
+        double zg = min(daughter1.pt(), daughter2.pt()) / pt;
+        double deltaR = daughter1.delta_R(daughter2);
+        drBranches_.push_back(ndrop);
+        zg_.push_back(zg);
+        dr12_.push_back(deltaR);
+        kappa_.push_back(getKappa(jetpt,pt,deltaR,zg));
+      }
 
-    // Obtain the (z,pT,theta) of the selected splitting
-     fastjet::PseudoJet daughter1, daughter2;
-     groomed_jet.has_parents(daughter1, daughter2);
+      fjOutputs_.push_back(groomed_jet); //put CA reclusterd jet after grooming
 
-   //  if(daughter1.pt() + daughter2.pt() > 0 && daughter1.E()>0. && daughter2.E()>0. && daughter1.m()>0. && daughter2.m()>0.){
-   if (daughter1.pt() + daughter2.pt() > 0 && daughter1.E()>0. && daughter2.E()>0){
-     double pt = daughter1.pt() + daughter2.pt();
-     double zg = min(daughter1.pt(), daughter2.pt()) / pt;
-     double deltaR = daughter1.delta_R(daughter2);
-     drBranches_.push_back(ndrop);
-     zg_.push_back(zg);
-     dr12_.push_back(deltaR);
-     //kappa_.push_back(kappa);
-     kappa_.push_back(getKappa(pt,deltaR,zg));
-   }
-
-    // Compute the n-subjettiness ratio
-   // double beta = 2;
-   // fastjet::contrib::NsubjettinessRatio nSub21_beta2(2,1, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(beta));
-
-//    fastjet::contrib::NsubjettinessRatio nSub32_beta2(3,2, fastjet::contrib::OnePass_KT_Axes(), fastjet::contrib::UnnormalizedMeasure(beta));
-
-  //  double tau21_beta2 = nSub21_beta2(groomed_jet);
-   // double tau32_beta2 = nSub32_beta2(groomed_jet);
-
-   // tau21_.push_back(tau21_beta2);
-  //  tau32_.push_back(tau32_beta2);
-    fjOutputs_.push_back(groomed_jet); //put CA reclusterd jet after grooming
-
-   }
-   else {fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
+      }
+      else {
+         fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
          dr12_.push_back(-1.);
          drBranches_.push_back(-1.);
          kappa_.push_back(-1.);
-       //  tau21_.push_back(-1);
-        // tau32_.push_back(-1);
+      }
    }
- }
    return fjOutputs_;
 }
 
 
 #endif
-
-
