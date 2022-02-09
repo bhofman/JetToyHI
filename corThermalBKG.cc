@@ -28,6 +28,8 @@
 using namespace std;
 using namespace fastjet;
 
+//./corThermalBKG -hard samples/Jewel/30/jewelNR_30_vac-8.hepmc -hardtype HepMC2 -pileup samples/Thermal/ThermalEventsMult7000PtAv1.20_1.pu14 -nev 100000 -output samples/AnalysisSamples/30/Jewel_30_cs-8.root -pt 30+10
+
 int main (int argc, char ** argv) {
 
   auto start_time = chrono::steady_clock::now();
@@ -105,28 +107,23 @@ int main (int argc, char ** argv) {
 
     vector<PseudoJet> particlesMerged = particlesBkg;
     particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
-    
-    //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
 
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
-
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
-
     //We want to substract for full event instead:
     csSubFullEventIterative csSubFull( {2.,2.} , {.1,0.075}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     csSubFull.setBackgroundGrid();
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection csFullJets(sorted_by_pt(jet_selector(fullSig.inclusive_jets(0.)))); 
-
+    jetCollection csFullJets(sorted_by_pt(jet_selector(fullSig.inclusive_jets(1.)))); 
 
     //match CSFull jets to signal jets
     jetMatcher jmCSFull(R);
@@ -145,6 +142,63 @@ int main (int argc, char ** argv) {
     
     jetCollection jetCollectionCS_Sig(csFullJetsClean);
 
+    //calculate some angularities
+    //std::cout << "calc angularities groomed jets" << std::endl;
+    vector<double> antiKT_width;      antiKT_width.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_pTD;        antiKT_pTD.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_mr;         antiKT_mr.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_mr2;        antiKT_mr2.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_r2z;        antiKT_r2z.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau1;       antiKT_tau1.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau2;       antiKT_tau2.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau3;       antiKT_tau3.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau4;       antiKT_tau4.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau5;       antiKT_tau5.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau2tau1;   antiKT_tau2tau1.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> antiKT_tau3tau2;   antiKT_tau3tau2.reserve(jetCollectionCS_Sig.getJet().size());
+    
+    //need to get list of constituents of groomed jets
+    for(PseudoJet jet : jetCollectionCS_Sig.getJet()) {
+      antiKT_width.push_back(width.result(jet));
+      antiKT_pTD.push_back(pTD.result(jet));
+      antiKT_mr.push_back(mr.result(jet));
+      antiKT_mr2.push_back(mr2.result(jet));
+      antiKT_r2z.push_back(r2z.result(jet));
+      antiKT_tau1.push_back(nSub1_beta1(jet));
+      antiKT_tau2.push_back(nSub2_beta1(jet));
+      antiKT_tau3.push_back(nSub3_beta1(jet));
+      antiKT_tau4.push_back(nSub4_beta1(jet));
+      antiKT_tau5.push_back(nSub5_beta1(jet));
+
+      if (nSub1_beta1(jet) != 0){
+        antiKT_tau2tau1.push_back(nSub2_beta1(jet)/nSub1_beta1(jet));
+      }
+      if (nSub1_beta1(jet) == 0){
+        //std::cout<<"Still zero tau1 "<<jet.constituents().size()<<std::endl;
+        antiKT_tau2tau1.push_back(-999);
+      }
+      if (nSub2_beta1(jet) != 0){
+        antiKT_tau3tau2.push_back(nSub3_beta1(jet)/nSub2_beta1(jet));
+      }
+      if (nSub2_beta1(jet) == 0){
+        //std::cout<<"Still zero tau2 "<<jet.constituents().size()<<std::endl;
+        antiKT_tau3tau2.push_back(-999);
+      }
+    }
+
+    jetCollectionCS_Sig.addVector("antiKT_width", antiKT_width);
+    jetCollectionCS_Sig.addVector("antiKT_ptd",   antiKT_pTD);
+    jetCollectionCS_Sig.addVector("antiKT_mr",    antiKT_mr);
+    jetCollectionCS_Sig.addVector("antiKT_mr2",   antiKT_mr2);
+    jetCollectionCS_Sig.addVector("antiKT_r2z",   antiKT_r2z);
+    jetCollectionCS_Sig.addVector("antiKT_tau1",  antiKT_tau1);
+    jetCollectionCS_Sig.addVector("antiKT_tau2",  antiKT_tau2);
+    jetCollectionCS_Sig.addVector("antiKT_tau3",  antiKT_tau3);
+    jetCollectionCS_Sig.addVector("antiKT_tau4",  antiKT_tau4);
+    jetCollectionCS_Sig.addVector("antiKT_tau5",  antiKT_tau5);
+    jetCollectionCS_Sig.addVector("antiKT_tau2tau1", antiKT_tau2tau1);
+    jetCollectionCS_Sig.addVector("antiKT_tau3tau2", antiKT_tau3tau2);
+
     //---------------------------------------------------------------------------
     //   CS test statistics
     //---------------------------------------------------------------------------
@@ -157,8 +211,8 @@ int main (int argc, char ** argv) {
     std::vector<double> ptPull; ptPull.reserve(jetCollectionSig.getJet().size());
     std::vector<double> mPull; mPull.reserve(jetCollectionSig.getJet().size());
     for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
-      ptPull.push_back((jetCollectionCS_Sig.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionCS_Sig.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
-      mPull.push_back((jetCollectionCS_Sig.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionCS_Sig.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
+      ptPull.push_back((csFullJets.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(csFullJets.getJet()[i].pt()+jetCollectionSig.getJet()[i].pt()));
+      mPull.push_back((csFullJets.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(csFullJets.getJet()[i].m()+jetCollectionSig.getJet()[i].m()));
     }
 
     trw.addCollection("ptPull",        ptPull);
@@ -169,43 +223,18 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
-
-    jetCollection CalculateFor = jetCollectionCS_Sig;
-
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
     softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollectionCS_SDX(sdgSigBeta00Z01.doGrooming(jetCollectionCS_Sig));
-    softDropGroomer sdgSigBeta00Z01SIG(0.1, 0.0, R);
-    jetCollection jetCollectionSIG_SD(sdgSigBeta00Z01SIG.doGrooming(jetCollectionSig));
+    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionCS_Sig));
 
-    jetCollectionCS_SDX.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
-    jetCollectionCS_SDX.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
-    jetCollectionCS_SDX.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
-    
-    //match CSFull jets to signal jets
-    jetMatcher jmCSFullSD(R);
-    jmCSFullSD.setBaseJets(jetCollectionCS_SDX);
-    jmCSFullSD.setTagJets(jetCollectionSIG_SD);
-    jmCSFullSD.matchJets();
-    jmCSFullSD.reorderedToTag(jetCollectionCS_SDX);
-    
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> csFullJetsCleanX;
-    for(fastjet::PseudoJet jet : jetCollectionCS_SDX.getJet()) {
-      if(jet.has_constituents()){
-        csFullJetsCleanX.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionCS_SD(csFullJetsCleanX);
-  
     jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
     jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
     jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
     
     //calculate some angularities
     //std::cout << "calc angularities groomed jets" << std::endl;
-    vector<double> SD_width;      SD_width.reserve(jetCollectionCS_SD.getJet().size());
-    vector<double> SD_pTD;        SD_pTD.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_width;    SD_width.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SD_pTD;      SD_pTD.reserve(jetCollectionCS_SD.getJet().size());
     vector<double> SD_mr;         SD_mr.reserve(jetCollectionCS_SD.getJet().size());
     vector<double> SD_mr2;        SD_mr2.reserve(jetCollectionCS_SD.getJet().size());
     vector<double> SD_r2z;        SD_r2z.reserve(jetCollectionCS_SD.getJet().size());
@@ -234,12 +263,14 @@ int main (int argc, char ** argv) {
         SD_tau2tau1.push_back(nSub2_beta1(jet)/nSub1_beta1(jet));
       }
       if (nSub1_beta1(jet) == 0){
+        //std::cout<<"Still zero tau1 "<<jet.constituents().size()<<std::endl;
         SD_tau2tau1.push_back(-999);
       }
       if (nSub2_beta1(jet) != 0){
         SD_tau3tau2.push_back(nSub3_beta1(jet)/nSub2_beta1(jet));
       }
       if (nSub2_beta1(jet) == 0){
+        //std::cout<<"Still zero tau2 "<<jet.constituents().size()<<std::endl;
         SD_tau3tau2.push_back(-999);
       }
     }
@@ -286,10 +317,9 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     //trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("antikt_",        jetCollectionCS_Sig);
+    trw.addCollection("antiKT_",        jetCollectionCS_Sig);
     trw.addCollection("SD_",      jetCollectionCS_SD);
     
-  
     trw.fillTree();
 
   }//event loop
@@ -300,7 +330,7 @@ int main (int argc, char ** argv) {
 
   TTree *trOut = trw.getTree();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetOBS.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetThermalBKG.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();

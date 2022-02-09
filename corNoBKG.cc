@@ -114,19 +114,69 @@ int main (int argc, char ** argv) {
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
+    //calculate some angularities
+    //std::cout << "calc angularities groomed jets" << std::endl;
+    vector<double> antiKT_width;      antiKT_width.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_pTD;        antiKT_pTD.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_mr;         antiKT_mr.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_mr2;        antiKT_mr2.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_r2z;        antiKT_r2z.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau1;       antiKT_tau1.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau2;       antiKT_tau2.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau3;       antiKT_tau3.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau4;       antiKT_tau4.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau5;       antiKT_tau5.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau2tau1;   antiKT_tau2tau1.reserve(jetCollectionSig.getJet().size());
+    vector<double> antiKT_tau3tau2;   antiKT_tau3tau2.reserve(jetCollectionSig.getJet().size());
+    
+    //need to get list of constituents of groomed jets
+    for(PseudoJet jet : jetCollectionSig.getJet()) {
+      antiKT_width.push_back(width.result(jet));
+      antiKT_pTD.push_back(pTD.result(jet));
+      antiKT_mr.push_back(mr.result(jet));
+      antiKT_mr2.push_back(mr2.result(jet));
+      antiKT_r2z.push_back(r2z.result(jet));
+      antiKT_tau1.push_back(nSub1_beta1(jet));
+      antiKT_tau2.push_back(nSub2_beta1(jet));
+      antiKT_tau3.push_back(nSub3_beta1(jet));
+      antiKT_tau4.push_back(nSub4_beta1(jet));
+      antiKT_tau5.push_back(nSub5_beta1(jet));
+
+      if (nSub1_beta1(jet) != 0){
+        antiKT_tau2tau1.push_back(nSub2_beta1(jet)/nSub1_beta1(jet));
+      }
+      if (nSub1_beta1(jet) == 0){
+        //std::cout<<"Still zero tau1 "<<jet.constituents().size()<<std::endl;
+        antiKT_tau2tau1.push_back(-999);
+      }
+      if (nSub2_beta1(jet) != 0){
+        antiKT_tau3tau2.push_back(nSub3_beta1(jet)/nSub2_beta1(jet));
+      }
+      if (nSub2_beta1(jet) == 0){
+        //std::cout<<"Still zero tau2 "<<jet.constituents().size()<<std::endl;
+        antiKT_tau3tau2.push_back(-999);
+      }
+    }
+
+    jetCollectionSig.addVector("antiKT_width", antiKT_width);
+    jetCollectionSig.addVector("antiKT_ptd",   antiKT_pTD);
+    jetCollectionSig.addVector("antiKT_mr",    antiKT_mr);
+    jetCollectionSig.addVector("antiKT_mr2",   antiKT_mr2);
+    jetCollectionSig.addVector("antiKT_r2z",   antiKT_r2z);
+    jetCollectionSig.addVector("antiKT_tau1",  antiKT_tau1);
+    jetCollectionSig.addVector("antiKT_tau2",  antiKT_tau2);
+    jetCollectionSig.addVector("antiKT_tau3",  antiKT_tau3);
+    jetCollectionSig.addVector("antiKT_tau4",  antiKT_tau4);
+    jetCollectionSig.addVector("antiKT_tau5",  antiKT_tau5);
+    jetCollectionSig.addVector("antiKT_tau2tau1", antiKT_tau2tau1);
+    jetCollectionSig.addVector("antiKT_tau3tau2", antiKT_tau3tau2);
+    
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
     softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
     jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionSig));
-
-    //match CSFull jets to signal jets
-    jetMatcher jmCSFullSD(R);
-    jmCSFullSD.setBaseJets(jetCollectionCS_SD);
-    jmCSFullSD.setTagJets(jetCollectionSig);
-    jmCSFullSD.matchJets();
-    jmCSFullSD.reorderedToTag(jetCollectionCS_SD);
 
     jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
     jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
@@ -218,7 +268,7 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     //trw.addCollection("eventWeight",   eventWeight);
-    //trw.addCollection("sigJet",        jetCollectionSig);
+    trw.addCollection("antikt_",        jetCollectionSig);
     trw.addCollection("SD_",      jetCollectionCS_SD);
     
   
@@ -232,7 +282,7 @@ int main (int argc, char ** argv) {
 
   TTree *trOut = trw.getTree();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetBKG.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetNoBKG.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();
