@@ -317,6 +317,7 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     //trw.addCollection("eventWeight",   eventWeight);
+    trw.addCollection("jetCollectionSig_",        jetCollectionSig);
     trw.addCollection("antiKT_",        jetCollectionCS_Sig);
     trw.addCollection("SD_",      jetCollectionCS_SD);
     
