@@ -9,7 +9,7 @@
 class JetChargeDynamical {
 public:
   /// default ctor
-  JetChargeDynamical(double Xi = 0.2, double kappaLower = 0.5,double kappaHigher = 0.5, double ptmin = -1.) :
+  JetChargeDynamical(double Xi = 0.3, double kappaLower = 1.0,double kappaHigher = 0.3, double ptmin = -1.) :
     _Xi(Xi),
     _kappaLower(kappaLower),
     _kappaHigher(kappaHigher),
