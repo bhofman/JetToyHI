@@ -1,98 +1,43 @@
-#ifndef jetCharge_h
-#define jetCharge_h
+#ifndef __JetCharge_HH__
+#define __JetCharge_HH__
 
-#include "TPDGCode.h"
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <fstream>
+//------------------------------------------------------------------------
+/// jet charge
+///
+/// This is defined as in 
 
-#include "fastjet/PseudoJet.hh"
-
-using namespace std;
-using namespace fastjet;
-
-//---------------------------------------------------------------
-// Description
-// This class calculates the jet charge
-// ** WORK IN PROGRESS **  Need some work on adding PDG code from pu14
-//---------------------------------------------------------------
-
-class jetCharge {
-
-private:
-	std::vector<double> jetcharge_ ;
-	double num_ ;
-	double den_ ;
-	double kappa_ ; 
-
-	std::vector<fastjet::PseudoJet> fjInputs_;
-
-	std::map<int, int> PDGCharges = {
-	    {211, 1},    // pi+
-	    {-211, -1},  // pi-
-	    {321, 1},    // K+
-	    {-321, -1},  // K-
-	    {2212, 1},   // p
-	    {-2212, -1}, // p-
-	    {11, -1},    // e-
-	    {-11, 1},    // e+
-	    {13, -1},    // mu-
-	    {-13, 1},    // mu+
-	    {22, 0},     // gamma
-	    {111, 0},    // pi0
-	    {130, 0},    // K0L
-	    {2112, 0},   // n
-	    {-2112, 0},  // nbar
-	    {311, 0},    // K0
-	    {12, 0},     // nue
-	    {-12, 0},    // nuebar
-	    {14, 0},     // numu
-	    {-14, 0},    // numubar
-	    {16, 0},     // nutau
-	    {-16, 0}     // nutaubar
-	};
-
+class JetCharge {
 public:
-	jetCharge(std::vector<fastjet::PseudoJet> fjInputs, double kappa):
-		fjInputs_(fjInputs),
-		kappa_(kappa)
-	{
-	}
+  /// default ctor
+  JetCharge(double kappa = 0.5, double ptmin = -1.) :
+    _kappa(kappa),
+    _ptmin(ptmin)
+   {}
 
-	std::vector<double> getCharge()
-	{
-		jetcharge_.reserve(fjInputs_.size());
-		
-		for(fastjet::PseudoJet& jet : fjInputs_) {
+  /// compute the function
+  virtual double result(const fastjet::PseudoJet &jet) const {
+    // check the jet is appropriate for computation
+    if (!jet.has_constituents()) {
+      Printf("Jet charge calculation can only be applied on jets for which the constituents are known.");
+      return -999.;
+    }
+    vector<fastjet::PseudoJet> constits = jet.constituents();
+    double sumcharge = 0.;
+    double jetPt = jet.perp();
 
-			if (!jet.has_constituents()) {
-			    std::cout<<"Can not calculate jet charge if jet has no constituents!"<<std::endl;
-			    jetcharge_.push_back(-99999.);
-			}
-			for (auto part : jet.constituents())
-			{
-			    den_ = den_ + part.perp(); // pow(part.perp(), kappa);
-			    int _pdgid = part.user_info().pdg_id;
+    for(fastjet::PseudoJet p : constits) {
+      if(p.perp()<_ptmin) continue;
+      const double & ch = p.user_info<PU14>().charge(); //three_charge()
+      double zFrac = p.perp()/jetPt;
+      sumcharge += ch*std::pow(zFrac,_kappa);
 
-			    std::cout<<_pdgid<<std::endl;
+    }
+    return sumcharge;
+  }
+  
+protected:
+  double _kappa;
+  double _ptmin;
+};
 
-			    if (PDGCharges.count(_pdgid) == 1)
-			    {
-			        num_ += PDGCharges[_pdgid] * pow(part.perp(), kappa_);
-			    }
-			    else
-			    {
-			        cout << " Charge for PDG id " << _pdgid << " is not defined, using 0." << endl;
-			    }
-			}
-
-			den_ = pow(den_, kappa_);
-			jetcharge_.push_back(num_/den_);
-		}
-
-		return jetcharge_;
-	}
-};	
 #endif
