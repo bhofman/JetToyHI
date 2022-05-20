@@ -9,7 +9,7 @@
 class JetChargeDynamical {
 public:
   /// default ctor
-  JetChargeDynamical(double Xi = 0.2, double kappaLower = 0.5,double kappaUpper = 0.5, double ptmin = -1.) :
+  JetChargeDynamical(double Xi = 0.2, double kappaLower = 0.5,double kappaHigher = 0.5, double ptmin = -1.) :
     _Xi(Xi),
     _kappaLower(kappaLower),
     _kappaHigher(kappaHigher),
@@ -24,15 +24,16 @@ public:
       return -999.;
     }
     vector<fastjet::PseudoJet> constits = jet.constituents();
-    double sumJetCharge = 0;
+    double sumcharge = 0;
     double jetPt = jet.perp();
+    if (jetPt == 0) return -999.;
 
     for(fastjet::PseudoJet p : constits) {
       if(p.perp()<_ptmin) continue;
       const double & ch = p.user_info<PU14>().charge(); //three_charge()
       double zFrac = p.perp()/jetPt;
-      if(zFrac <= Xi) sumcharge += ch*std::pow(zFrac,_kappaLower);
-      if(zFrac > Xi) sumcharge += ch*std::pow(zFrac,_kappaHigher);
+      if(zFrac <= _Xi) sumcharge += ch*std::pow(zFrac,_kappaLower);
+      if(zFrac > _Xi) sumcharge += ch*std::pow(zFrac,_kappaHigher);
     }
     return sumcharge;
   }

@@ -24,6 +24,7 @@ public:
     vector<fastjet::PseudoJet> constits = jet.constituents();
     double sumcharge = 0.;
     double jetPt = jet.perp();
+    if (jetPt == 0) return -999.;
 
     for(fastjet::PseudoJet p : constits) {
       if(p.perp()<_ptmin) continue;
