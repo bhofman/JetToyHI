@@ -1,6 +1,7 @@
 #ifndef __JetChargeDynamical_HH__
 #define __JetChargeDynamical_HH__
-
+#include <iostream>
+#include <TRandom3.h>
 //------------------------------------------------------------------------
 /// Dynamical jet charge
 ///
@@ -20,7 +21,7 @@ public:
   virtual double result(const fastjet::PseudoJet &jet) const {
     // check the jet is appropriate for computation
     if (!jet.has_constituents()) {
-      Printf("Jet charge calculation can only be applied on jets for which the constituents are known.");
+      Printf("Dynamical Jet charge calculation can only be applied on jets for which the constituents are known.");
       return -999.;
     }
     vector<fastjet::PseudoJet> constits = jet.constituents();
@@ -30,8 +31,8 @@ public:
 
     for(fastjet::PseudoJet p : constits) {
       if(p.perp()<_ptmin) continue;
-      const double & ch = p.user_info<PU14>().charge(); //three_charge()
       double zFrac = p.perp()/jetPt;
+      double ch = p.user_info<PU14>().charge();
       if(zFrac <= _Xi) sumcharge += ch*std::pow(zFrac,_kappaLower);
       if(zFrac > _Xi) sumcharge += ch*std::pow(zFrac,_kappaHigher);
     }

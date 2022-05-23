@@ -18,6 +18,8 @@
 #include "include/dyGroomer.hh"
 #include "include/csSubtractor.hh"
 #include "include/csSubFullEventIterative.hh"
+#include "include/jetCharge.hh"
+#include "include/jetChargeDynamical.hh"
 using namespace std;
 using namespace fastjet;
 
@@ -182,6 +184,24 @@ int main (int argc, char ** argv) {
     jetCollectionSig.addVector("tau3tau2", antiKT_tau3tau2);
     
     //---------------------------------------------------------------------------
+    //   Jet Charge
+    //---------------------------------------------------------------------------
+
+    vector<double> jetCharge;               jetCharge.reserve(jetCollectionSig.getJet().size());
+    vector<double> jetChargeDynamical;      jetChargeDynamical.reserve(jetCollectionSig.getJet().size());
+
+    JetCharge jetChargeFunction(0.5,-1); // kappa, ptmin
+    JetChargeDynamical jetChargeDynamicalFunction(0.3,1.0,0.3,-1); // Xi, Kappa<, Kappa>, ptmin
+
+    for(PseudoJet jet : jetCollectionSig.getJet()) {
+      jetCharge.push_back(jetChargeFunction.result(jet));
+      jetChargeDynamical.push_back(jetChargeDynamicalFunction.result(jet));
+    }
+
+    jetCollectionSig.addVector("jetCharge", jetCharge);
+    jetCollectionSig.addVector("jetChargeDynamical", jetChargeDynamical);
+    
+    //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
@@ -262,6 +282,21 @@ int main (int argc, char ** argv) {
     jetCollectionCS_SD.addVector("SD_tau5", SD_tau5);
     jetCollectionCS_SD.addVector("SD_tau2tau1", SD_tau2tau1);
     jetCollectionCS_SD.addVector("SD_tau3tau2", SD_tau3tau2);
+
+    //---------------------------------------------------------------------------
+    //   SD Jet Charge
+    //---------------------------------------------------------------------------
+
+    vector<double> SDjetCharge;               SDjetCharge.reserve(jetCollectionCS_SD.getJet().size());
+    vector<double> SDjetChargeDynamical;      SDjetChargeDynamical.reserve(jetCollectionCS_SD.getJet().size());
+
+    for(PseudoJet jet : jetCollectionCS_SD.getJet()) {
+      SDjetCharge.push_back(jetChargeFunction.result(jet));
+      SDjetChargeDynamical.push_back(jetChargeDynamicalFunction.result(jet));
+    }
+
+    jetCollectionCS_SD.addVector("SD_jetCharge", SDjetCharge);
+    jetCollectionCS_SD.addVector("SD_jetChargeDynamical", SDjetChargeDynamical);
 
     //---------------------------------------------------------------------------
     //   Dynamical grooming

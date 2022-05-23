@@ -1,6 +1,8 @@
 #ifndef __JetCharge_HH__
 #define __JetCharge_HH__
 
+#include <TRandom3.h>
+
 //------------------------------------------------------------------------
 /// jet charge
 ///
@@ -28,10 +30,9 @@ public:
 
     for(fastjet::PseudoJet p : constits) {
       if(p.perp()<_ptmin) continue;
-      const double & ch = p.user_info<PU14>().charge(); //three_charge()
       double zFrac = p.perp()/jetPt;
+      double ch = p.user_info<PU14>().charge();
       sumcharge += ch*std::pow(zFrac,_kappa);
-
     }
     return sumcharge;
   }
