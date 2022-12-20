@@ -107,19 +107,18 @@ int main (int argc, char ** argv) {
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt+10)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(5.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
     //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {2.,2.} , {.1,0.075}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullEventIterative csSubFull( {2.,2.} , {.2,0.05}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
-    csSubFull.setBackgroundGrid();
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection csFullJets(sorted_by_pt(jet_selector(fullSig.inclusive_jets(1.)))); 
-
+    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(user_pt)))); 
+    /*
     //match CSFull jets to signal jets
     jetMatcher jmCSFull(R);
     jmCSFull.setBaseJets(csFullJets);
@@ -135,7 +134,7 @@ int main (int argc, char ** argv) {
       }
     }
     jetCollection jetCollectionCS_Sig(csFullJetsClean);
-
+    */
     //calculate some angularities
     vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionCS_Sig.getJet().size());
     vector<double> z1_theta15;     z1_theta15.reserve(jetCollectionCS_Sig.getJet().size());
@@ -224,7 +223,7 @@ int main (int argc, char ** argv) {
 
     jetCollectionCS_Sig.addVector("jetCharge", jetCharge);
     jetCollectionCS_Sig.addVector("jetChargeDynamical", jetChargeDynamical);
-
+    /*
     //---------------------------------------------------------------------------
     //   CS test statistics
     //---------------------------------------------------------------------------
@@ -245,7 +244,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("mPull",        mPull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
-
+    */
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------

@@ -25,11 +25,8 @@
 #include "include/csSubtractor.hh"
 #include "include/csSubFullEventIterative.hh"
 
-//hsdjdfkjfdwkjlsdafklnjsdfakljsdfakjlsdsdffsdsfdsfd
 using namespace std;
 using namespace fastjet;
-
-// ./runAnalysis -hard samples/PythiaEventsTune14PtHat120.pu14 -pileup samples/ThermalEventsMult12000PtAv0.70.pu14 -nev 10
 
 int main (int argc, char ** argv) {
 
@@ -41,6 +38,8 @@ int main (int argc, char ** argv) {
   //bool verbose = cmdline.present("-verbose");
 
   int user_pt = cmdline.value<int>("-pt",10); 
+  double user_r = cmdline.value<double>("-r",0.2); 
+  double user_alpha = cmdline.value<double>("-alpha",0.0); 
 
   cout << "will run on " << nEvent << " events" << endl;
 
@@ -127,9 +126,9 @@ int main (int argc, char ** argv) {
     fastjet::contrib::ConstituentSubtractor subtractor;
     subtractor.set_distance_type(fastjet::contrib::ConstituentSubtractor::deltaR);  // distance in eta-phi plane
     subtractor.set_max_distance(
-        0.1);  // free parameter for the maximal allowed distance between particle i and ghost k
+        user_r);  // free parameter for the maximal allowed distance between particle i and ghost k
     subtractor.set_alpha(
-        2.);  // free parameter for the distance measure (the exponent of particle pt). Note that in older versions of the package alpha was multiplied by two but in newer versions this is not the case anymore
+        user_alpha);  // free parameter for the distance measure (the exponent of particle pt). Note that in older versions of the package alpha was multiplied by two but in newer versions this is not the case anymore
     subtractor.set_do_mass_subtraction();
     subtractor.set_remove_all_zero_pt_particles(true);
 
@@ -141,28 +140,13 @@ int main (int argc, char ** argv) {
     ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // te vrpef, tel dummy pt niet mee.
     
-    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollectionSigSDBeta00Z01(sdgSigBeta00Z01.doGrooming(jetCollectionSig));
-    jetCollectionSigSDBeta00Z01.addVector("sig_SD_zg",    sdgSigBeta00Z01.getZgs());
-    jetCollectionSigSDBeta00Z01.addVector("sig_SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
-    jetCollectionSigSDBeta00Z01.addVector("sig_SD_dr12",  sdgSigBeta00Z01.getDR12());
-    trw.addCollection("sig_SD_",        jetCollectionSigSDBeta00Z01);
-    
     //---------------------------------------------------------------------------
-    //  
+    //  mom4sub
     //---------------------------------------------------------------------------
-    
     jetCollection jetCollectionSigJewelSub(GetCorrectedJets(jetCollectionSig.getJet(), particlesDummy));
 
-    softDropGroomer sdgSigSubBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollectionSigSDSubBeta00Z01(sdgSigSubBeta00Z01.doGroomingWithJewelSub(jetCollectionSig,particlesDummy));
-    jetCollectionSigSDSubBeta00Z01.addVector("jewelsub_SD_zg",    sdgSigSubBeta00Z01.getZgs());
-    jetCollectionSigSDSubBeta00Z01.addVector("jewelsub_SD_ndrop", sdgSigSubBeta00Z01.getNDroppedSubjets());
-    jetCollectionSigSDSubBeta00Z01.addVector("jewelsub_SD_dr12",  sdgSigSubBeta00Z01.getDR12());
-    trw.addCollection("jewelsub_SD_",      jetCollectionSigSDSubBeta00Z01);
-    
     //---------------------------------------------------------------------------
-    //   
+    //  cs sub
     //---------------------------------------------------------------------------
     fastjet::ClusterSequenceArea csSigSub(subtracted_particles, jet_def, area_def);
     jetCollection jetCollectionCSSub(sorted_by_pt(jet_selector(csSigSub.inclusive_jets(1.)))); // Inclusive jets to take a jets with pt over (pt_min) 
@@ -181,15 +165,7 @@ int main (int argc, char ** argv) {
         csFullJetsClean.push_back(jet);
       }
     }
-    
     jetCollection jetCollectionCS_Sig(csFullJetsClean);
-
-    softDropGroomer sdgSigBeta00Z01_cs(0.1, 0.0, R);
-    jetCollection jetCollectionSigSDBeta00Z01_cs(sdgSigBeta00Z01_cs.doGrooming(jetCollectionCS_Sig));
-    jetCollectionSigSDBeta00Z01_cs.addVector("cssub_SD_zg",    sdgSigBeta00Z01_cs.getZgs());
-    jetCollectionSigSDBeta00Z01_cs.addVector("cssub_SD_ndrop", sdgSigBeta00Z01_cs.getNDroppedSubjets());
-    jetCollectionSigSDBeta00Z01_cs.addVector("cssub_SD_dr12",  sdgSigBeta00Z01_cs.getDR12());
-    trw.addCollection("cssub_SD_",      jetCollectionSigSDBeta00Z01_cs);
 
     //---------------------------------------------------------------------------
     //   
@@ -207,8 +183,8 @@ int main (int argc, char ** argv) {
     //Give variable we want to write out to treeWriter.
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
     trw.addCollection("sig",        jetCollectionSig);
-    trw.addCollection("cssub",      jetCollectionCSSub);
-    trw.addCollection("jewelsub",      jetCollectionSigJewelSub);
+    trw.addCollection("cs",      jetCollectionCSSub);
+    trw.addCollection("jewel",      jetCollectionSigJewelSub);
   
     trw.fillTree();
 
