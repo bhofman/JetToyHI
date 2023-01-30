@@ -31,8 +31,9 @@ int main (int argc, char ** argv) {
   // inputs read from command line
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   //bool verbose = cmdline.present("-verbose");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "No_bkg.root").c_str(), "RECREATE");
 
-  int user_pt = cmdline.value<int>("-pt",10); 
+  int user_pt = cmdline.value<int>("-pt",1); 
 
   cout << "will run on " << nEvent << " events" << endl;
 
@@ -53,6 +54,7 @@ int main (int argc, char ** argv) {
 
   double jetRapMax = 2.0;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
+  //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
   Angularity Angularity_z1_theta1(1.0,1.,R);
   Angularity Angularity_z1_theta15( 1.5,1.,R);
@@ -103,14 +105,25 @@ int main (int argc, char ** argv) {
     vector<PseudoJet> particlesMerged = particlesBkg;
     particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
     
-    //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
-
+    std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
+    //vector<PseudoJet> particlesMerged = particlesMergedAll;
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
 
-    fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
+    fastjet::ClusterSequenceArea csSig(particlesMerged, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+
+    std::vector<double>  event_pt, event_rap, event_eta, event_phi;
+    for(auto particles : particlesMerged) {
+                event_pt.push_back(particles.perp());
+                event_eta.push_back(particles.eta());
+                event_phi.push_back(particles.phi());
+    } 
+    
+    trw.addCollection("event_pt",        event_pt);
+    trw.addCollection("event_eta",        event_eta);
+    trw.addCollection("event_phi",        event_phi);
 
     //calculate some angularities
     vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionSig.getJet().size());
@@ -186,7 +199,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   Jet Charge
     //---------------------------------------------------------------------------
-
+    /*
     vector<double> jetCharge;               jetCharge.reserve(jetCollectionSig.getJet().size());
     vector<double> jetChargeDynamical;      jetChargeDynamical.reserve(jetCollectionSig.getJet().size());
 
@@ -319,7 +332,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("kappa_zD",        dygzDSig.getKappas());
     trw.addCollection("zg_zD",        dygzDSig.getZgs());
     trw.addCollection("dR_zD",        dygzDSig.getDR12());
-
+    */
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
@@ -328,7 +341,7 @@ int main (int argc, char ** argv) {
 
     //trw.addCollection("eventWeight",   eventWeight);
     trw.addCollection("",        jetCollectionSig);
-    trw.addCollection("SD_",      jetCollectionCS_SD);
+    //trw.addCollection("SD_",      jetCollectionCS_SD);
     
   
     trw.fillTree();
@@ -339,9 +352,8 @@ int main (int argc, char ** argv) {
   Bar.Print();
   Bar.PrintLine();
 
+  fout->cd();
   TTree *trOut = trw.getTree();
-
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetNoBKG.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();

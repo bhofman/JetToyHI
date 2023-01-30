@@ -30,8 +30,9 @@ int main (int argc, char ** argv) {
   // inputs read from command line
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   //bool verbose = cmdline.present("-verbose");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "MediumThermal_bkg.root").c_str(), "RECREATE");
 
-  int user_pt = cmdline.value<int>("-pt",10); 
+  int user_pt = cmdline.value<int>("-pt",1); 
   double user_r = cmdline.value<double>("-r",0.2); 
   double user_alpha = cmdline.value<double>("-alpha",0.0); 
 
@@ -54,6 +55,7 @@ int main (int argc, char ** argv) {
 
   double jetRapMax = 2.0;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
+  //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
   Angularity Angularity_z1_theta1(1.0,1.,R);
   Angularity Angularity_z1_theta15( 1.5,1.,R);
@@ -406,9 +408,8 @@ int main (int argc, char ** argv) {
   Bar.Print();
   Bar.PrintLine();
 
+  fout->cd();
   TTree *trOut = trw.getTree();
-
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetThermalBKG.root").c_str(), "RECREATE");
   trOut->Write();
   fout->Write();
   fout->Close();
