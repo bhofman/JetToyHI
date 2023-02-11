@@ -15,17 +15,12 @@
 
 #include "include/extraInfo.hh"
 #include "include/jetCollection.hh"
-#include "include/softDropGroomer.hh"
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
-#include "include/Angularity.hh"
 #include "include/AliceFastSim.hh"
-
-#include "include/csSubtractorFullEvent.hh"
 
 using namespace std;
 using namespace fastjet;
-
 
 int main (int argc, char ** argv) {
 
@@ -54,11 +49,8 @@ int main (int argc, char ** argv) {
   JetDefinition jet_def(antikt_algorithm, R);
 
   double jetRapMax = 3.0;
-  Selector jet_selector = SelectorAbsRapMax(jetRapMax);
+  Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
-  Angularity width(1.,1.,R);
-  Angularity pTD(0.,2.,R);
-    
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle(-1);
 
@@ -84,31 +76,25 @@ int main (int argc, char ** argv) {
     //   fastsim
     //---------------------------------------------------------------------------
     AliceFastSim fastSim(particlesSig);
-    auto acceptance = fastSim.AliceAcceptance();
+    auto truth = fastSim.AliceAcceptance();
     auto detector = fastSim.AliceDetector();
-    //fastSim.test();
 
     //---------------------------------------------------------------------------
     //   jet clustering
     //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea sig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(sig.inclusive_jets(25.))));
+    fastjet::ClusterSequenceArea sigTruth(truth, jet_def, area_def);
+    jetCollection jetCollectionSig_Truth(sorted_by_pt(jet_selector(sigTruth.inclusive_jets(25.))));
 
-    fastjet::ClusterSequenceArea sig_acc(acceptance, jet_def, area_def);
-    jetCollection jetCollectionSig_acc(sorted_by_pt(jet_selector(sig_acc.inclusive_jets(25.))));
-
-    fastjet::ClusterSequenceArea sig_det(detector, jet_def, area_def);
-    jetCollection jetCollectionSig_det(sorted_by_pt(jet_selector(sig_det.inclusive_jets(25.))));
+    fastjet::ClusterSequenceArea sigDetector(detector, jet_def, area_def);
+    jetCollection jetCollectionSig_Detector(sorted_by_pt(jet_selector(sigDetector.inclusive_jets(25.))));
 
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
-    //Give variable we want to write out to treeWriter.
-    //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("sigJet",        jetCollectionSig);
-    trw.addCollection("sigJet_sim",        jetCollectionSig_acc);
-    trw.addCollection("sigJet_det",        jetCollectionSig_det);
+
+    trw.addCollection("sigJet_Truth_",        jetCollectionSig_Truth);
+    trw.addCollection("sigJet_Detector_",        jetCollectionSig_Detector);
 
     trw.fillTree();
 

@@ -4,6 +4,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include <TRandom.h>
+#include <TH1D.h>
 
 //---------------------------------------------------------------
 // Description
@@ -101,7 +102,7 @@ protected:
         sigma = _pt * (0.00085 * _pt + 0.00415);
     }
     else {
-     sigma = _pt * (0.0015 * _pt - 0.035);
+        sigma = _pt * (0.0015 * _pt - 0.035);
     }
 
     _pt_smeared = randomGenerator.Gaus(_pt, sigma);
