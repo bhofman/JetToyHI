@@ -90,8 +90,21 @@ protected:
 
   TRandom randomGenerator;
 
-  double smearedPt (double _pt) { // Work in progress
-    double _pt_smeared = _pt;
+  double smearedPt (double _pt) { // Adapted from https://github.com/ezradlesser/pyjetty/blob/9e2eb21f0c1a74c1b576c1ec187b03fd447ddd87/pyjetty/alice_analysis/process/user/fastsim/eff_smear.py#L27
+    double _pt_smeared;
+    double sigma;
+
+    if (_pt < 1){
+        sigma =  _pt * (-0.035 * _pt + 0.04);
+    }
+    else if (_pt < 60) {
+        sigma = _pt * (0.00085 * _pt + 0.00415);
+    }
+    else {
+     sigma = _pt * (0.0015 * _pt - 0.035);
+    }
+
+    _pt_smeared = randomGenerator.Gaus(_pt, sigma);
 
     return _pt_smeared;
   }
