@@ -89,14 +89,14 @@ int main (int argc, char ** argv) {
 
     fastjet::ClusterSequenceArea sigDetector_smaller(detector, jet_def_smaller, area_def);
     jetCollection jetCollectionSig_Detector_smaller(sorted_by_pt(jet_selector(sigDetector_smaller.inclusive_jets(10.))));
-/*
+
     //match truth and detector jets
     jetMatcher jetMatch_smaller(R);
     jetMatch_smaller.setBaseJets(jetCollectionSig_Detector_smaller);
     jetMatch_smaller.setTagJets(jetCollectionSig_Truth_smaller);
     jetMatch_smaller.matchJets();
     jetMatch_smaller.reorderedToTag(jetCollectionSig_Detector_smaller);
-*/
+
     //---------------------------------------------------------------------------
     //   jet clustering of small R
     //---------------------------------------------------------------------------
