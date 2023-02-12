@@ -40,7 +40,6 @@ int main (int argc, char ** argv) {
   treeWriter trw("jetTree");
 
   //Jet definition
-  double R                   = 0.4;
   double ghostRapMax         = 6.0;
   double ghost_area          = 0.005;
   int    active_area_repeats = 1;
@@ -82,11 +81,20 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   jet clustering
     //---------------------------------------------------------------------------
+    JetDefinition jet_def(antikt_algorithm, 0.05);
+
     fastjet::ClusterSequenceArea sigTruth(truth, jet_def, area_def);
-    jetCollection jetCollectionSig_Truth(sorted_by_pt(jet_selector(sigTruth.inclusive_jets(25.))));
+    jetCollection jetCollectionSig_Truth(sorted_by_pt(jet_selector(sigTruth.inclusive_jets(10.))));
 
     fastjet::ClusterSequenceArea sigDetector(detector, jet_def, area_def);
-    jetCollection jetCollectionSig_Detector(sorted_by_pt(jet_selector(sigDetector.inclusive_jets(25.))));
+    jetCollection jetCollectionSig_Detector(sorted_by_pt(jet_selector(sigDetector.inclusive_jets(10.))));
+
+    //match CSFull jets to signal jets
+    jetMatcher jetMatch_05(0.05);
+    jetMatch_05.setBaseJets(jetCollectionSig_Detector);
+    jetMatch_05.setTagJets(jetCollectionSig_Truth);
+    jetMatch_05.matchJets();
+    jetMatch_05.reorderedToTag(jetCollectionSig_Detector);
 
     //---------------------------------------------------------------------------
     //   write tree

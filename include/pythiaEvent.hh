@@ -33,7 +33,7 @@ private :
   std::vector<fastjet::PseudoJet> partons;
 
 public :
-  pythiaEvent(double pthat = 120., unsigned int tune = 14, double rapMin = -3., double rapMax = 3., bool partonLevel = false, bool vinciaShower = false);
+  pythiaEvent(double pthat = 20., unsigned int tune = 14, double rapMin = -0.95, double rapMax = 0.95, bool partonLevel = false, bool vinciaShower = false);
   std::vector<fastjet::PseudoJet> createPythiaEvent();
   
   std::vector<fastjet::PseudoJet> getPartonList() const { return partons; }
@@ -49,7 +49,7 @@ pythiaEvent::pythiaEvent(double pthat, unsigned int tune, double rapMin, double 
     
   // Generator. LHC process and output selection. Initialization.
   // tunes: http://home.thep.lu.se/~torbjorn/pythia82html/Tunes.html
-  pythia.readString("Beams:eCM = 5002.");
+  pythia.readString("Beams:eCM = 13000.");
   pythia.readString("HardQCD:all = on");
   pythia.readString(Form("PhaseSpace:pTHatMin = %.1f",pthat_));
   pythia.readString("Next:numberShowInfo = 0");
