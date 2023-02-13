@@ -57,6 +57,8 @@ int main (int argc, char ** argv) {
 
   EventMixer mixer(&cmdline);  //the mixing machinery from PU14 workshop
 
+  AliceFastSim fastSim = AliceFastSim();
+
   // loop over events
   int iev = 0;
   unsigned int entryDiv = (nEvent > 200) ? nEvent / 200 : 1;
@@ -76,7 +78,7 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   fastsim
     //---------------------------------------------------------------------------
-    AliceFastSim fastSim(particlesSig);
+    fastSim.setInputEvent(particlesSig);
     vector<PseudoJet> truth = fastSim.AliceAcceptance();
     vector<PseudoJet> detector = fastSim.AliceDetector();
 

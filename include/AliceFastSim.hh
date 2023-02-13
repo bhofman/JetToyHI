@@ -12,21 +12,23 @@
 // Author: B. Hofman
 //---------------------------------------------------------------
 
-
-/// WORK IN PROGRESS
-
-
 class AliceFastSim {
 public:
   /// default ctor
-  AliceFastSim(vector<PseudoJet> event, const char* filename = "include/tr_eff.root", const char* histname = "tr_eff"){
-    _fullEvent = event;
-
+  AliceFastSim(const char* filename = "include/tr_eff.root", const char* histname = "tr_eff"){
     file = new TFile(filename);
     histogram = (TH1D*)file->Get(histname);
 
     lowerLimit = histogram->GetXaxis()->GetXmax();
     upperLimit = histogram->GetXaxis()->GetXmin();
+  }
+  /// default dtor
+  ~AliceFastSim() {
+    file->Close();
+  }
+
+  void setInputEvent(vector<PseudoJet> event) {
+    _fullEvent = event;
   }
 
   /// Returns event with detector acceptance applied
