@@ -30,6 +30,7 @@ int main (int argc, char ** argv) {
   // inputs read from command line
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   //bool verbose = cmdline.present("-verbose");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetToyHIResultSimpleJetAnalysis.root").c_str(), "RECREATE");
 
   double R = cmdline.value<double>("-R",0.);
 
@@ -138,7 +139,6 @@ int main (int argc, char ** argv) {
   Bar.Print();
   Bar.PrintLine();
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "JetToyHIResultSimpleJetAnalysis.root").c_str(), "RECREATE");
   fout->cd();
   TTree *trOut = trw.getTree();
   trOut->Write();
