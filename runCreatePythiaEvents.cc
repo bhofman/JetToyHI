@@ -28,20 +28,21 @@ int main (int argc, char ** argv)
   unsigned int nEvent = cmdline.value<unsigned int>("-nev",1);  // first argument: command line option; second argument: default value
 
   //event generator settings
-  double       ptHat = cmdline.value<double>("-pthat",20);//20.;
+  double       ptHat = cmdline.value<double>("-pthat",20);
   unsigned int tune  = cmdline.value<int>("-tune",14);
-  unsigned int job  = cmdline.value<int>("-job",0);
+  unsigned int job   = cmdline.value<int>("-job",0);
+  unsigned int seed  = cmdline.value<int>("-seed",0);
 
   std::cout << "generating " << nEvent << " events with pthat = " << ptHat << " and tune = " << tune << std::endl;  
 
-  pythiaEvent pyt(ptHat, tune, -0.95, 0.95);
+  pythiaEvent pyt(ptHat, tune, -0.95, 0.95, false, false, seed);
 
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle(-1);
 
   //output text file
   ofstream fout;
-  const char *dir = getenv("PWD");//"/eos/user/m/mverweij/JetWorkshop2017/samples/";
+  const char *dir = getenv("PWD");
   TString outFileName = Form("%s/PythiaEventsTune%dPtHat%.0f_%i.pu14",dir,tune,ptHat,job);
   
   fout.open(outFileName.Data());

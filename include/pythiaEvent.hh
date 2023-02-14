@@ -29,11 +29,12 @@ private :
   double rapMax_;
   bool   partonLevel_;
   bool   vinciaShower_;
+  unsigned int seed_;
 
   std::vector<fastjet::PseudoJet> partons;
 
 public :
-  pythiaEvent(double pthat = 20., unsigned int tune = 14, double rapMin = -0.95, double rapMax = 0.95, bool partonLevel = false, bool vinciaShower = false);
+  pythiaEvent(double pthat = 20., unsigned int tune = 14, double rapMin = -0.95, double rapMax = 0.95, bool partonLevel = false, bool vinciaShower = false, unsigned int seed = 0);
   std::vector<fastjet::PseudoJet> createPythiaEvent();
   
   std::vector<fastjet::PseudoJet> getPartonList() const { return partons; }
@@ -43,8 +44,8 @@ public :
 
 };
   
-pythiaEvent::pythiaEvent(double pthat, unsigned int tune, double rapMin, double rapMax, bool partonLevel, bool vinciaShower) :
-  pthat_(pthat), tune_(tune), rapMin_(rapMin), rapMax_(rapMax), partonLevel_(partonLevel), vinciaShower_(vinciaShower)
+pythiaEvent::pythiaEvent(double pthat, unsigned int tune, double rapMin, double rapMax, bool partonLevel, bool vinciaShower, unsigned int seed) :
+  pthat_(pthat), tune_(tune), rapMin_(rapMin), rapMax_(rapMax), partonLevel_(partonLevel), vinciaShower_(vinciaShower), seed_(seed)
 {
     
   // Generator. LHC process and output selection. Initialization.
@@ -56,14 +57,14 @@ pythiaEvent::pythiaEvent(double pthat, unsigned int tune, double rapMin, double 
   pythia.readString("Next:numberShowProcess = 0");
   pythia.readString("Next:numberShowEvent = 0");
   pythia.readString("Random:setSeed = on");
-  pythia.readString("Random:seed = 0");
+  pythia.readString(Form("Random:seed = %d",seed_));
   if(partonLevel_) {
     pythia.readString("HadronLevel:all = off");
   }
   if(vinciaShower_)
     pythia.readString("PartonShowers:Model = 2"); //activate the VINCIA parton shower
   else
-      pythia.readString(Form("Tune:pp = %d",tune_));
+    pythia.readString(Form("Tune:pp = %d",tune_));
   
   pythia.init();
 
