@@ -112,16 +112,17 @@ int main (int argc, char ** argv) {
     jetCollection jetCollectionSig_Detector_bigger(sorted_by_pt(jet_selector(sigDetector_bigger.inclusive_jets(10.))));
 
     //match bigger to smaller jets
-    jetMatcher jetMatch_bigger(R+0.05);
-    jetMatch_bigger.setBaseJets(jetCollectionSig_Truth_bigger);
-    jetMatch_bigger.setTagJets(jetCollectionSig_Truth_smaller);
-    jetMatch_bigger.matchJets();
-    jetMatch_bigger.reorderedToTag(jetCollectionSig_Truth_bigger);
+    jetMatcher jetMatch_bigger_Truth(R+0.05);
+    jetMatch_bigger_Truth.setBaseJets(jetCollectionSig_Truth_bigger);
+    jetMatch_bigger_Truth.setTagJets(jetCollectionSig_Truth_smaller);
+    jetMatch_bigger_Truth.matchJets();
+    jetMatch_bigger_Truth.reorderedToTag(jetCollectionSig_Truth_bigger);
 
-    jetMatch_bigger.setBaseJets(jetCollectionSig_Detector_bigger);
-    jetMatch_bigger.setTagJets(jetCollectionSig_Detector_smaller);
-    jetMatch_bigger.matchJets();
-    jetMatch_bigger.reorderedToTag(jetCollectionSig_Detector_bigger);
+    jetMatcher jetMatch_bigger_Detector(R+0.05);
+    jetMatch_bigger_Detector.setBaseJets(jetCollectionSig_Detector_bigger);
+    jetMatch_bigger_Detector.setTagJets(jetCollectionSig_Detector_smaller);
+    jetMatch_bigger_Detector.matchJets();
+    jetMatch_bigger_Detector.reorderedToTag(jetCollectionSig_Detector_bigger);
 
     //---------------------------------------------------------------------------
     //   write tree
