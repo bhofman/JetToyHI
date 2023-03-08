@@ -19,8 +19,8 @@ public:
     file = new TFile(filename);
     histogram = (TH1D*)file->Get(histname);
 
-    lowerLimit = histogram->GetXaxis()->GetXmax();
-    upperLimit = histogram->GetXaxis()->GetXmin();
+    lowerLimit = histogram->GetXaxis()->GetXmin();
+    upperLimit = histogram->GetXaxis()->GetXmax();
   }
   /// default dtor
   ~AliceFastSim() {
@@ -50,8 +50,8 @@ public:
   vector<PseudoJet> AliceDetector() {
     _detectorEvent.clear();
     if (_truthEvent.size() == 0) {
-        AliceAcceptance();
         std::cout << "Warning: AliceAcceptance() has not been run. Running now..." << endl;
+        AliceAcceptance();
     }
     
     for(fastjet::PseudoJet particles : _truthEvent) {
