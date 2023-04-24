@@ -31,7 +31,7 @@ int main (int argc, char ** argv) {
   // inputs read from command line
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   //bool verbose = cmdline.present("-verbose");
-  TFile *fout = new TFile(cmdline.value<string>("-output", "No_bkg.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "JetToyHIResultSimpleJetAnalysis.root").c_str(), "RECREATE");
 
   int user_pt = cmdline.value<int>("-pt",1); 
 
@@ -61,7 +61,7 @@ int main (int argc, char ** argv) {
 
   Angularity Angularity_z2_theta1(1.0,2.,R);
   Angularity Angularity_z2_theta2(2.0,2.,R);
-    
+  
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle(-1);
 
@@ -92,25 +92,48 @@ int main (int argc, char ** argv) {
 
     vector<PseudoJet> particlesMerged = particlesBkg;
     particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
-    
-    //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
-    //vector<PseudoJet> particlesMerged = particlesMergedAll;
+
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
+    fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(5.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
-    fastjet::ClusterSequenceArea csSig(particlesMerged, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+    //---------------------------------------------------------------------------
+    //   background subtraction FULL EVENT ITERATIVE
+    //---------------------------------------------------------------------------
+    //We want to substract for full event instead:
+    csSubFullEventIterative csSubFull( {2.,2.} , {.2,0.05}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFull.setInputParticles(particlesMerged);
+    csSubFull.setMaxEta(3.);
+    fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
+    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(user_pt)))); 
+    /*
+    //match CSFull jets to signal jets
+    jetMatcher jmCSFull(R);
+    jmCSFull.setBaseJets(csFullJets);
+    jmCSFull.setTagJets(jetCollectionSig);
+    jmCSFull.matchJets();
+    jmCSFull.reorderedToTag(csFullJets);
 
+    // Make sure our groomed jets have constituents
+    std::vector<fastjet::PseudoJet> csFullJetsClean;
+    for(fastjet::PseudoJet jet : csFullJets.getJet()) {
+      if(jet.has_constituents()){
+        csFullJetsClean.push_back(jet);
+      }
+    }
+    jetCollection jetCollectionCS_Sig(csFullJetsClean);
+    */
     //calculate some angularities
-    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionSig.getJet().size());
-    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionSig.getJet().size());
+    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionCS_Sig.getJet().size());
 
-    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionSig.getJet().size());
-    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionSig.getJet().size());  
-    
+    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionCS_Sig.getJet().size());
+    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionCS_Sig.getJet().size());
+
     //need to get list of constituents of groomed jets
-    for(PseudoJet jet : jetCollectionSig.getJet()) {
+    for(PseudoJet jet : jetCollectionCS_Sig.getJet()) {
       z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
 
@@ -118,23 +141,44 @@ int main (int argc, char ** argv) {
       z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
 
-    jetCollectionSig.addVector("z1_theta1", z1_theta1);
-    jetCollectionSig.addVector("z1_theta2", z1_theta2);
+    jetCollectionCS_Sig.addVector("z1_theta1", z1_theta1);
+    jetCollectionCS_Sig.addVector("z1_theta2", z1_theta2);
 
-    jetCollectionSig.addVector("z2_theta1", z2_theta1);
-    jetCollectionSig.addVector("z2_theta2", z2_theta2);
+    jetCollectionCS_Sig.addVector("z2_theta1", z2_theta1);
+    jetCollectionCS_Sig.addVector("z2_theta2", z2_theta2);
 
+    //---------------------------------------------------------------------------
+    //   CS test statistics
+    //---------------------------------------------------------------------------
+    //Background densities used by constituent subtraction
+    std::vector<double> rhoFull;
+    std::vector<double> rhomFull;
+    rhoFull.push_back(csSubFull.getRho());  
+    rhomFull.push_back(csSubFull.getRhoM()); 
+    
+    std::vector<double> ptPull; ptPull.reserve(jetCollectionSig.getJet().size());
+    std::vector<double> mPull; mPull.reserve(jetCollectionSig.getJet().size());
+    for (unsigned int i = 0; i < jetCollectionSig.getJet().size(); i++) {
+      ptPull.push_back((csFullJets.getJet()[i].pt()-jetCollectionSig.getJet()[i].pt())/(jetCollectionSig.getJet()[i].pt()));
+      mPull.push_back((csFullJets.getJet()[i].m()-jetCollectionSig.getJet()[i].m())/(jetCollectionSig.getJet()[i].m()));
+    }
+
+    trw.addCollection("ptPull",        ptPull);
+    trw.addCollection("mPull",        mPull);
+    trw.addCollection("csFullRho",         rhoFull);
+    trw.addCollection("csFullRhom",        rhomFull);
+    */
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------
-    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0) // zcut=0.2 ALICE
-    softDropGroomer sdgSigBeta00Z01(0.2, 0.0, R);
-    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionSig));
+    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
+    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
+    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionCS_Sig));
 
     jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
     jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
     jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
-
+   
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
@@ -142,10 +186,11 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("",        jetCollectionSig);
+    trw.addCollection("",     jetCollectionCS_Sig);
     trw.addCollection("SD_",      jetCollectionCS_SD);
     
     trw.fillTree();
+
   }//event loop
 
   Bar.Update(nEvent);
