@@ -167,7 +167,7 @@ int main (int argc, char ** argv) {
     trw.addCollection("mPull",        mPull);
     trw.addCollection("csFullRho",         rhoFull);
     trw.addCollection("csFullRhom",        rhomFull);
-    */
+    
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the CS jets
     //---------------------------------------------------------------------------

@@ -84,33 +84,29 @@ int main (int argc, char ** argv) {
     eventWeight.push_back(mixer.hard_weight());
     eventWeight.push_back(mixer.pu_weight());
 
-    fastjet::Selector sig_selector = SelectorVertexNumber(0);
-    vector<PseudoJet> particlesSig = sig_selector(particlesMergedAll);
+    // run as --hard DETECTOR
+    fastjet::Selector detector_selector = SelectorVertexNumber(0);
+    vector<PseudoJet> particlesDetector = detector_selector(particlesMergedAll);
 
-    fastjet::Selector bkg_selector = SelectorVertexNumber(1);
-    vector<PseudoJet> particlesBkg = bkg_selector(particlesMergedAll);
+    // run as --pileup TRUTH
+    fastjet::Selector truth_selector = SelectorVertexNumber(1);
+    vector<PseudoJet> particlesTruth = truth_selector(particlesMergedAll);
 
-    vector<PseudoJet> particlesMerged = particlesBkg;
-    particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
-    
-    //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
-    //vector<PseudoJet> particlesMerged = particlesMergedAll;
     //---------------------------------------------------------------------------
-    //   jet clustering of signal jets
+    //   jet clustering of Detector jets
     //---------------------------------------------------------------------------
-
-    fastjet::ClusterSequenceArea csSig(particlesMerged, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+    fastjet::ClusterSequenceArea csDetector(particlesDetector, jet_def, area_def);
+    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //calculate some angularities
-    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionSig.getJet().size());
-    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionSig.getJet().size());
+    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionDetector.getJet().size());
+    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionDetector.getJet().size());
 
-    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionSig.getJet().size());
-    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionSig.getJet().size());  
+    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionDetector.getJet().size());
+    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionDetector.getJet().size());  
 
     //need to get list of constituents of groomed jets
-    for(PseudoJet jet : jetCollectionSig.getJet()) {
+    for(PseudoJet jet : jetCollectionDetector.getJet()) {
       z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
 
@@ -118,21 +114,77 @@ int main (int argc, char ** argv) {
       z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
 
-    jetCollectionSig.addVector("z1_theta1", z1_theta1);
-    jetCollectionSig.addVector("z1_theta2", z1_theta2);
+    jetCollectionDetector.addVector("z1_theta1", z1_theta1);
+    jetCollectionDetector.addVector("z1_theta2", z1_theta2);
 
-    jetCollectionSig.addVector("z2_theta1", z2_theta1);
-    jetCollectionSig.addVector("z2_theta2", z2_theta2);
-    //---------------------------------------------------------------------------
-    //   SOFTDROP Groom the CS jets
-    //---------------------------------------------------------------------------
-    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
-    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionSig));
+    jetCollectionDetector.addVector("z2_theta1", z2_theta1);
+    jetCollectionDetector.addVector("z2_theta2", z2_theta2);
 
-    jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
-    jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
-    jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
+    //---------------------------------------------------------------------------
+    //   SOFTDROP Groom the Detector jets
+    //---------------------------------------------------------------------------
+    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0) // zcut=0.2
+    softDropGroomer sdgSigBeta00Z01_Detector(0.2, 0.0, R);
+    jetCollection jetCollectionDetector_SD(sdgSigBeta00Z01_Detector.doGrooming(jetCollectionDetector));
+
+    jetCollectionDetector_SD.addVector("SD_zg",    sdgSigBeta00Z01_Detector.getZgs());
+    jetCollectionDetector_SD.addVector("SD_ndrop", sdgSigBeta00Z01_Detector.getNDroppedSubjets());
+    jetCollectionDetector_SD.addVector("SD_dr12",  sdgSigBeta00Z01_Detector.getDR12());
+
+    //---------------------------------------------------------------------------
+    //   jet clustering of Truth jets
+    //---------------------------------------------------------------------------
+    fastjet::ClusterSequenceArea csTruth(particlesDetector, jet_def, area_def);
+    jetCollection jetCollectionTruth(sorted_by_pt(jet_selector(csTruth.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+
+    //match truth jets to detector jets
+    jetMatcher jmCSFull(R);
+    jmCSFull.setBaseJets(jetCollectionTruth);
+    jmCSFull.setTagJets(jetCollectionDetector);
+    jmCSFull.matchJets();
+    jmCSFull.reorderedToTag(jetCollectionTruth);
+
+    // Make sure our groomed jets have constituents
+    std::vector<fastjet::PseudoJet> MatchedEvent;
+    for(fastjet::PseudoJet jet : csFullJets.getJet()) {
+      if(jet.has_constituents()){
+        MatchedEvent.push_back(jet);
+      }
+    }
+    jetCollection jetCollectionTruthMatched(MatchedEvent);    
+
+    //calculate some angularities
+    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionTruthMatched.getJet().size());
+    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionTruthMatched.getJet().size());
+
+    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionTruthMatched.getJet().size());
+    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionTruthMatched.getJet().size());  
+
+    //need to get list of constituents of groomed jets
+    for(PseudoJet jet : jetCollectionTruthMatched.getJet()) {
+      z1_theta1.push_back(Angularity_z1_theta1.result(jet));
+      z1_theta2.push_back(Angularity_z1_theta2.result(jet));
+
+      z2_theta1.push_back(Angularity_z2_theta1.result(jet));
+      z2_theta2.push_back(Angularity_z2_theta2.result(jet));
+    }
+
+    jetCollectionTruthMatched.addVector("z1_theta1", z1_theta1);
+    jetCollectionTruthMatched.addVector("z1_theta2", z1_theta2);
+
+    jetCollectionTruthMatched.addVector("z2_theta1", z2_theta1);
+    jetCollectionTruthMatched.addVector("z2_theta2", z2_theta2);
+
+    //---------------------------------------------------------------------------
+    //   SOFTDROP Groom the Truth jets
+    //---------------------------------------------------------------------------
+    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0) // zcut=0.2
+    softDropGroomer sdgSigBeta00Z01_Truth(0.2, 0.0, R);
+    jetCollection jetCollectionTruth_SD(sdgSigBeta00Z01_Truth.doGrooming(jetCollectionTruthMatched));
+
+    jetCollectionTruth_SD.addVector("SD_zg",    sdgSigBeta00Z01_Truth.getZgs());
+    jetCollectionTruth_SD.addVector("SD_ndrop", sdgSigBeta00Z01_Truth.getNDroppedSubjets());
+    jetCollectionTruth_SD.addVector("SD_dr12",  sdgSigBeta00Z01_Truth.getDR12());
     
     //---------------------------------------------------------------------------
     //   write tree
@@ -141,9 +193,10 @@ int main (int argc, char ** argv) {
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
 
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("",        jetCollectionSig);
-    trw.addCollection("SD_",      jetCollectionCS_SD);
-    
+    trw.addCollection("Det_",        jetCollectionDetector);
+    trw.addCollection("Det_SD_",      jetCollectionTruth);
+    trw.addCollection("Truth_",        jetCollectionDetector_SD);
+    trw.addCollection("Truth_SD_",      jetCollectionTruth_SD);
   
     trw.fillTree();
 
