@@ -101,7 +101,6 @@ int main (int argc, char ** argv) {
     //calculate some angularities
     vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionDetector.getJet().size());
     vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionDetector.getJet().size());
-
     vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionDetector.getJet().size());
     vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionDetector.getJet().size());  
 
@@ -109,16 +108,14 @@ int main (int argc, char ** argv) {
     for(PseudoJet jet : jetCollectionDetector.getJet()) {
       z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
-
       z2_theta1.push_back(Angularity_z2_theta1.result(jet));
       z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
 
-    jetCollectionDetector.addVector("z1_theta1", z1_theta1);
-    jetCollectionDetector.addVector("z1_theta2", z1_theta2);
-
-    jetCollectionDetector.addVector("z2_theta1", z2_theta1);
-    jetCollectionDetector.addVector("z2_theta2", z2_theta2);
+    jetCollectionDetector.addVector("Det_z1_theta1", z1_theta1);
+    jetCollectionDetector.addVector("Det_z1_theta2", z1_theta2);
+    jetCollectionDetector.addVector("Det_z2_theta1", z2_theta1);
+    jetCollectionDetector.addVector("Det_z2_theta2", z2_theta2);
 
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the Detector jets
@@ -127,9 +124,9 @@ int main (int argc, char ** argv) {
     softDropGroomer sdgSigBeta00Z01_Detector(0.2, 0.0, R);
     jetCollection jetCollectionDetector_SD(sdgSigBeta00Z01_Detector.doGrooming(jetCollectionDetector));
 
-    jetCollectionDetector_SD.addVector("SD_zg",    sdgSigBeta00Z01_Detector.getZgs());
-    jetCollectionDetector_SD.addVector("SD_ndrop", sdgSigBeta00Z01_Detector.getNDroppedSubjets());
-    jetCollectionDetector_SD.addVector("SD_dr12",  sdgSigBeta00Z01_Detector.getDR12());
+    jetCollectionDetector_SD.addVector("Det_SD_zg",    sdgSigBeta00Z01_Detector.getZgs());
+    jetCollectionDetector_SD.addVector("Det_SD_ndrop", sdgSigBeta00Z01_Detector.getNDroppedSubjets());
+    jetCollectionDetector_SD.addVector("Det_SD_dr12",  sdgSigBeta00Z01_Detector.getDR12());
 
     //---------------------------------------------------------------------------
     //   jet clustering of Truth jets
@@ -146,7 +143,7 @@ int main (int argc, char ** argv) {
 
     // Make sure our groomed jets have constituents
     std::vector<fastjet::PseudoJet> MatchedEvent;
-    for(fastjet::PseudoJet jet : csFullJets.getJet()) {
+    for(fastjet::PseudoJet jet : jetCollectionTruth.getJet()) {
       if(jet.has_constituents()){
         MatchedEvent.push_back(jet);
       }
@@ -154,26 +151,23 @@ int main (int argc, char ** argv) {
     jetCollection jetCollectionTruthMatched(MatchedEvent);    
 
     //calculate some angularities
-    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionTruthMatched.getJet().size());
-    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionTruthMatched.getJet().size());
-
-    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionTruthMatched.getJet().size());
-    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionTruthMatched.getJet().size());  
+    vector<double> z1_theta1_truth;      z1_theta1_truth.reserve(jetCollectionTruthMatched.getJet().size());
+    vector<double> z1_theta2_truth;      z1_theta2_truth.reserve(jetCollectionTruthMatched.getJet().size());
+    vector<double> z2_theta1_truth;      z2_theta1_truth.reserve(jetCollectionTruthMatched.getJet().size());
+    vector<double> z2_theta2_truth;      z2_theta2_truth.reserve(jetCollectionTruthMatched.getJet().size());  
 
     //need to get list of constituents of groomed jets
     for(PseudoJet jet : jetCollectionTruthMatched.getJet()) {
-      z1_theta1.push_back(Angularity_z1_theta1.result(jet));
-      z1_theta2.push_back(Angularity_z1_theta2.result(jet));
-
-      z2_theta1.push_back(Angularity_z2_theta1.result(jet));
-      z2_theta2.push_back(Angularity_z2_theta2.result(jet));
+      z1_theta1_truth.push_back(Angularity_z1_theta1.result(jet));
+      z1_theta2_truth.push_back(Angularity_z1_theta2.result(jet));
+      z2_theta1_truth.push_back(Angularity_z2_theta1.result(jet));
+      z2_theta2_truth.push_back(Angularity_z2_theta2.result(jet));
     }
 
-    jetCollectionTruthMatched.addVector("z1_theta1", z1_theta1);
-    jetCollectionTruthMatched.addVector("z1_theta2", z1_theta2);
-
-    jetCollectionTruthMatched.addVector("z2_theta1", z2_theta1);
-    jetCollectionTruthMatched.addVector("z2_theta2", z2_theta2);
+    jetCollectionTruthMatched.addVector("Truth_z1_theta1", z1_theta1_truth);
+    jetCollectionTruthMatched.addVector("Truth_z1_theta2", z1_theta2_truth);
+    jetCollectionTruthMatched.addVector("Truth_z2_theta1", z2_theta1_truth);
+    jetCollectionTruthMatched.addVector("Truth_z2_theta2", z2_theta2_truth);
 
     //---------------------------------------------------------------------------
     //   SOFTDROP Groom the Truth jets
@@ -182,9 +176,9 @@ int main (int argc, char ** argv) {
     softDropGroomer sdgSigBeta00Z01_Truth(0.2, 0.0, R);
     jetCollection jetCollectionTruth_SD(sdgSigBeta00Z01_Truth.doGrooming(jetCollectionTruthMatched));
 
-    jetCollectionTruth_SD.addVector("SD_zg",    sdgSigBeta00Z01_Truth.getZgs());
-    jetCollectionTruth_SD.addVector("SD_ndrop", sdgSigBeta00Z01_Truth.getNDroppedSubjets());
-    jetCollectionTruth_SD.addVector("SD_dr12",  sdgSigBeta00Z01_Truth.getDR12());
+    jetCollectionTruth_SD.addVector("Truth_SD_zg",    sdgSigBeta00Z01_Truth.getZgs());
+    jetCollectionTruth_SD.addVector("Truth_SD_ndrop", sdgSigBeta00Z01_Truth.getNDroppedSubjets());
+    jetCollectionTruth_SD.addVector("Truth_SD_dr12",  sdgSigBeta00Z01_Truth.getDR12());
     
     //---------------------------------------------------------------------------
     //   write tree

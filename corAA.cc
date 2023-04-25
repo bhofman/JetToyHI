@@ -94,12 +94,6 @@ int main (int argc, char ** argv) {
     particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
 
     //---------------------------------------------------------------------------
-    //   jet clustering of signal jets
-    //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(5.)))); // Inclusive jets to take a jets with pt over (pt_min)
-
-    //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
     //We want to substract for full event instead:
@@ -108,27 +102,10 @@ int main (int argc, char ** argv) {
     csSubFull.setMaxEta(3.);
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
     jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(user_pt)))); 
-    /*
-    //match CSFull jets to signal jets
-    jetMatcher jmCSFull(R);
-    jmCSFull.setBaseJets(csFullJets);
-    jmCSFull.setTagJets(jetCollectionSig);
-    jmCSFull.matchJets();
-    jmCSFull.reorderedToTag(csFullJets);
 
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> csFullJetsClean;
-    for(fastjet::PseudoJet jet : csFullJets.getJet()) {
-      if(jet.has_constituents()){
-        csFullJetsClean.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionCS_Sig(csFullJetsClean);
-    */
     //calculate some angularities
     vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionCS_Sig.getJet().size());
     vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionCS_Sig.getJet().size());
-
     vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionCS_Sig.getJet().size());
     vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionCS_Sig.getJet().size());
 
@@ -136,14 +113,12 @@ int main (int argc, char ** argv) {
     for(PseudoJet jet : jetCollectionCS_Sig.getJet()) {
       z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
-
       z2_theta1.push_back(Angularity_z2_theta1.result(jet));
       z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
 
     jetCollectionCS_Sig.addVector("z1_theta1", z1_theta1);
     jetCollectionCS_Sig.addVector("z1_theta2", z1_theta2);
-
     jetCollectionCS_Sig.addVector("z2_theta1", z2_theta1);
     jetCollectionCS_Sig.addVector("z2_theta2", z2_theta2);
 

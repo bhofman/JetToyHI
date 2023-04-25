@@ -105,7 +105,6 @@ int main (int argc, char ** argv) {
     //calculate some angularities
     vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionSig.getJet().size());
     vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionSig.getJet().size());
-
     vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionSig.getJet().size());
     vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionSig.getJet().size());  
     
@@ -113,14 +112,12 @@ int main (int argc, char ** argv) {
     for(PseudoJet jet : jetCollectionSig.getJet()) {
       z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
-
       z2_theta1.push_back(Angularity_z2_theta1.result(jet));
       z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
 
     jetCollectionSig.addVector("z1_theta1", z1_theta1);
     jetCollectionSig.addVector("z1_theta2", z1_theta2);
-
     jetCollectionSig.addVector("z2_theta1", z2_theta1);
     jetCollectionSig.addVector("z2_theta2", z2_theta2);
 
