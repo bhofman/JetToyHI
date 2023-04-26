@@ -56,7 +56,7 @@ void ProgressBar::SanityCheck()
       Max = 100;
       Progress = 0;
    }
-   if(Max < Min)
+   if(Max < Min && Max != -1)
    {
       std::cerr << "[ProgressBar] Min > Max!  Reversing the role of the two" << std::endl;
       std::swap(Min, Max);
@@ -67,7 +67,7 @@ void ProgressBar::SanityCheck()
       std::cerr << "[ProgressBar] Negative progress.  Resetting to minimum value" << std::endl;
       Progress = Min;
    }
-   if(Progress > Max)
+   if(Progress > Max && Max != -1)
    {
       std::cerr << "[ProgressBar] Past-complete progress.  Resetting to maximum value" << std::endl;
       Progress = Max;

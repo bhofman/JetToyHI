@@ -29,13 +29,11 @@ int main (int argc, char ** argv) {
   
   CmdLine cmdline(argc,argv);
   // inputs read from command line
-  int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
-  //bool verbose = cmdline.present("-verbose");
-  TFile *fout = new TFile(cmdline.value<string>("-output", "No_bkg.root").c_str(), "RECREATE");
+  int nEvent = cmdline.value<int>("-nev",1);
+  cout << "Will run on " << nEvent << " events" << endl;
 
+  TFile *fout = new TFile(cmdline.value<string>("-output", "PPMC.root").c_str(), "RECREATE");
   int user_pt = cmdline.value<int>("-pt",1); 
-
-  cout << "will run on " << nEvent << " events" << endl;
 
   // Uncomment to silence fastjet banner
   ClusterSequence::set_fastjet_banner_stream(NULL);
@@ -63,14 +61,15 @@ int main (int argc, char ** argv) {
   Angularity Angularity_z2_theta2(2.0,2.,R);
 
   ProgressBar Bar(cout, nEvent);
-  Bar.SetStyle(-1);
+  Bar.SetStyle((nEvent == -1 ? 7 : -1));
 
   EventMixer mixer(&cmdline);  //the mixing machinery from PU14 workshop
 
   // loop over events
   int iev = 0;
   unsigned int entryDiv = (nEvent > 200) ? nEvent / 200 : 1;
-  while ( mixer.next_event() && iev < nEvent )
+  //while ( mixer.next_event() ) ; // && iev < nEvent )
+  while ( mixer.next_event() && ( iev < nEvent || nEvent == -1 ) )
   {
     // increment event number    
     iev++;
@@ -83,6 +82,9 @@ int main (int argc, char ** argv) {
     vector<double> eventWeight;
     eventWeight.push_back(mixer.hard_weight());
     eventWeight.push_back(mixer.pu_weight());
+    
+    trw.addCollection("eventWeight",   eventWeight);
+    trw.fillTree();
 
     // run as --hard DETECTOR
     fastjet::Selector detector_selector = SelectorVertexNumber(0);
@@ -91,7 +93,7 @@ int main (int argc, char ** argv) {
     // run as --pileup TRUTH
     fastjet::Selector truth_selector = SelectorVertexNumber(1);
     vector<PseudoJet> particlesTruth = truth_selector(particlesMergedAll);
-
+    
     //---------------------------------------------------------------------------
     //   jet clustering of Detector jets
     //---------------------------------------------------------------------------
@@ -196,7 +198,7 @@ int main (int argc, char ** argv) {
     
   
     trw.fillTree();
-
+    
   }//event loop
 
   Bar.Update(nEvent);
