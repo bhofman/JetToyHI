@@ -91,7 +91,6 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
-
     fastjet::ClusterSequenceArea csSig(particlesMerged, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
@@ -115,7 +114,7 @@ int main (int argc, char ** argv) {
     jetCollectionSig.addVector("z2_theta2", z2_theta2);
 
     //---------------------------------------------------------------------------
-    //   SOFTDROP Groom the CS jets
+    //   SOFTDROP Groom the signal jets
     //---------------------------------------------------------------------------
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0) // zcut=0.2 ALICE
     softDropGroomer sdgSigBeta00Z01(0.2, 0.0, R);

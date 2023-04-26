@@ -296,18 +296,22 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
    // logzgdr12_.reserve(fjInputs_.size());
    // sjleadingtrack_.reserve(fjInputs_.size());
    //--
-   
    for(fastjet::PseudoJet& jet : fjInputs_) {
       std::vector<fastjet::PseudoJet> particles, ghosts;
-      fastjet::SelectorIsPureGhost().sift(jet.constituents(), ghosts, particles);
+      if (!jet.has_constituents())  {
+         fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
+         zg_.push_back(-99.);
+         drBranches_.push_back(-99.);
+         dr12_.push_back(-99.);
+         continue;
+      }
 
+      fastjet::SelectorIsPureGhost().sift(jet.constituents(), ghosts, particles);
       fastjet::JetDefinition jet_def(fastjet::cambridge_algorithm,fastjet::JetDefinition::max_allowable_R);
       //fastjet::ClusterSequence cs(particles, jet_def);
-      
       // To make sure cs does not go out of scope, needed for jet constituents
       // Do we cause memory leak here?
       fastjet::ClusterSequence *cs = new fastjet::ClusterSequence(particles, jet_def);
-
       std::vector<fastjet::PseudoJet> tempJets = fastjet::sorted_by_pt(cs->inclusive_jets());
 
       if(tempJets.size()<1) {
@@ -318,7 +322,6 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
          // sjmass_.push_back(-1.);
          continue;
       }
-      
       fastjet::contrib::SoftDrop * sd = new fastjet::contrib::SoftDrop(beta_, zcut_, r0_ );
       sd->set_verbose_structure(true);
 
