@@ -131,8 +131,10 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   jet clustering of Truth jets
     //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea csTruth(particlesDetector, jet_def, area_def);
-    jetCollection jetCollectionTruth(sorted_by_pt(jet_selector(csTruth.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+    fastjet::ClusterSequenceArea csTruth(particlesTruth, jet_def, area_def);
+    jetCollection jetCollectionTruth(sorted_by_pt(jet_selector(csTruth.inclusive_jets(1.)))); // Inclusive jets to take a jets with pt over (pt_min)
+
+    trw.addCollection("Truth_",      jetCollectionTruth);
 
     //match truth jets to detector jets
     jetMatcher jmCSFull(R);
@@ -174,11 +176,11 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0) // zcut=0.2
     softDropGroomer sdgSigBeta00Z01_Truth(0.2, 0.0, R);
-    jetCollection jetCollectionTruth_SD(sdgSigBeta00Z01_Truth.doGrooming(jetCollectionTruthMatched));
+    jetCollection jetCollectionTruthMatched_SD(sdgSigBeta00Z01_Truth.doGrooming(jetCollectionTruthMatched));
 
-    jetCollectionTruth_SD.addVector("Truth_SD_zg",    sdgSigBeta00Z01_Truth.getZgs());
-    jetCollectionTruth_SD.addVector("Truth_SD_ndrop", sdgSigBeta00Z01_Truth.getNDroppedSubjets());
-    jetCollectionTruth_SD.addVector("Truth_SD_dr12",  sdgSigBeta00Z01_Truth.getDR12());
+    jetCollectionTruthMatched_SD.addVector("Truth_Matched_SD_zg",    sdgSigBeta00Z01_Truth.getZgs());
+    jetCollectionTruthMatched_SD.addVector("Truth_Matched_SD_ndrop", sdgSigBeta00Z01_Truth.getNDroppedSubjets());
+    jetCollectionTruthMatched_SD.addVector("Truth_Matched_SD_dr12",  sdgSigBeta00Z01_Truth.getDR12());
     
     //---------------------------------------------------------------------------
     //   write tree
@@ -188,9 +190,10 @@ int main (int argc, char ** argv) {
 
     trw.addCollection("eventWeight",   eventWeight);
     trw.addCollection("Det_",        jetCollectionDetector);
-    trw.addCollection("Det_SD_",      jetCollectionTruth);
-    trw.addCollection("Truth_",        jetCollectionDetector_SD);
-    trw.addCollection("Truth_SD_",      jetCollectionTruth_SD);
+    trw.addCollection("Det_SD_",      jetCollectionDetector_SD);
+    trw.addCollection("Truth_Matched_",        jetCollectionTruthMatched);
+    trw.addCollection("Truth_Matched_SD_",      jetCollectionTruthMatched_SD);
+    
   
     trw.fillTree();
 
