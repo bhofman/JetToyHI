@@ -73,6 +73,8 @@ private:
   CmdLine * _cmdline;
   std::string _hard_name, _pileup_name;
   std::string _hard_type, _pileup_type;
+  std::string _hard_varname, _pileup_varname;
+
   fastjet::SharedPtr<EventSource> _hard, _pileup;
   int _npu;
   // GSLRandom _rng;

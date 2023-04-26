@@ -461,20 +461,18 @@ public:
     std::vector<float>* _eta = 0;
     std::vector<float>* _phi = 0;
 
-   EventSource(const std::string & filename, const std::string &type)
+   EventSource(const std::string & filename, const std::string & type, const std::string & varname)
    {
       if(type == "ROOT"){
         f = new TFile(filename.c_str(),"READ");
-        tree = (TTree*)f->Get("AliAnalysisTaskTrackSkim_AliAnalysisTaskTrackSkimTrack_tree");
+        tree = (TTree*)f->Get("AliAnalysisTaskTrackSkim_tree");
         event_number = 0;
-
-        tree->SetBranchAddress("particle_data_pt", &_pt);
-        tree->SetBranchAddress("particle_data_eta", &_eta);
-        tree->SetBranchAddress("particle_data_phi", &_phi);
+        tree->SetBranchAddress((varname+"_pt").c_str(), &_pt);
+        tree->SetBranchAddress((varname+"_eta").c_str(), &_eta);
+        tree->SetBranchAddress((varname+"_phi").c_str(), &_phi);
       }
       else
         open_stream(filename);
-
 
       if(type == "PU14")
          Type = FileType::Pu14;
