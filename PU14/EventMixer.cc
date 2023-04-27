@@ -64,11 +64,11 @@ bool EventMixer::next_event() {
   if (! _hard->append_next_event(_particles,_hard_event_weight,0)) return false;
 
   unsigned hard_size = _particles.size();
-
+  
   // add pileup if available
   if (_pileup.get()){
     for (int i = 1; i <= _npu; i++) {
-      if (! _pileup->append_next_event(_particles,_pu_event_weight,i)) return false;
+      if (! _pileup->append_next_event(_particles,_pu_event_weight,i)) std::cout << "Empty pileup event" << std::endl; //return false;
     }
   }
 

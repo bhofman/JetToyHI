@@ -66,7 +66,7 @@ int main (int argc, char ** argv) {
   {
     // increment event number    
     iev++;
-       
+
     Bar.Update(iev);
     Bar.PrintWithMod(entryDiv);
 
@@ -74,10 +74,6 @@ int main (int argc, char ** argv) {
 
     vector<double> eventWeight;
     eventWeight.push_back(mixer.hard_weight());
-    eventWeight.push_back(mixer.pu_weight());
-    
-    trw.addCollection("eventWeight",   eventWeight);
-    trw.fillTree();
 
     // run as --hard DETECTOR
     fastjet::Selector detector_selector = SelectorVertexNumber(0);
