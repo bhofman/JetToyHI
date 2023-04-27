@@ -49,7 +49,7 @@ public:
 
 void ProgressBar::SanityCheck()
 {
-   if(Min == Max)
+   if(Min == Max && Max != -1)
    {
       std::cerr << "[ProgressBar] Sanity check on range failed.  Resetting to 0-100" << std::endl;
       Min = 0;
@@ -62,7 +62,7 @@ void ProgressBar::SanityCheck()
       std::swap(Min, Max);
    }
 
-   if(Progress < Min)
+   if(Progress < Min && Max != -1)
    {
       std::cerr << "[ProgressBar] Negative progress.  Resetting to minimum value" << std::endl;
       Progress = Min;
