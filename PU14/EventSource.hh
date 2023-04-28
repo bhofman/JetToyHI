@@ -461,11 +461,11 @@ public:
     std::vector<float>* _eta = 0;
     std::vector<float>* _phi = 0;
 
-   EventSource(const std::string & filename, const std::string & type, const std::string & varname)
+   EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename)
    {
       if(type == "ROOT"){
         f = new TFile(filename.c_str(),"READ");
-        tree = (TTree*)f->Get("AliAnalysisTaskTrackSkim_tree");
+        tree = (TTree*)f->Get(treename.c_str());
         event_number = 0;
         tree->SetBranchAddress((varname+"_pt").c_str(), &_pt);
         tree->SetBranchAddress((varname+"_eta").c_str(), &_eta);

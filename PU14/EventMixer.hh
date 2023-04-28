@@ -74,6 +74,7 @@ private:
   std::string _hard_name, _pileup_name;
   std::string _hard_type, _pileup_type;
   std::string _hard_varname, _pileup_varname;
+  std::string _hard_treename, _pileup_treename;
 
   fastjet::SharedPtr<EventSource> _hard, _pileup;
   int _npu;

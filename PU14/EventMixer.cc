@@ -20,6 +20,8 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
   _pileup_type = _cmdline->value<string>("-pileuptype", "PU14");
   _hard_varname   = _cmdline->value<string>("-hardvarname", "particle_");
   _pileup_varname = _cmdline->value<string>("-pileupvarname", "particle_");
+  _hard_treename   = _cmdline->value<string>("-hardtreename", "AliAnalysisTaskTrackSkim_tree");
+  _pileup_treename = _cmdline->value<string>("-pileuptreename", "AliAnalysisTaskTrackSkim_tree");
 
   // setting the multiplicity of pileup events (background HI)
   //
@@ -41,7 +43,7 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
     set_chs_rescaling_factor(1.0); // this effectively turns off CHS
   }
 
-  _hard  .reset(new EventSource(_hard_name  , _hard_type , _hard_varname));
+  _hard  .reset(new EventSource(_hard_name  , _hard_type , _hard_varname , _hard_treename));
   _hard->Recycle = false;
 
   if (_pileup_name.empty()){
@@ -49,7 +51,7 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
     _pileup.reset();
     _npu=0;
   } else {
-    _pileup.reset(new EventSource(_pileup_name, _pileup_type , _pileup_varname));
+    _pileup.reset(new EventSource(_pileup_name, _pileup_type , _pileup_varname , _pileup_treename));
     _pileup->Recycle = true;
   }
 }
