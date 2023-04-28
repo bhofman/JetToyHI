@@ -27,7 +27,7 @@ int main (int argc, char ** argv) {
   int nEvent = cmdline.value<int>("-nev",1);  // first argument: command line option; second argument: default value
   cout << "will run on " << nEvent << " events" << endl;
   
-  TFile *fout = new TFile(cmdline.value<string>("-output", "No_bkg.root").c_str(), "RECREATE");
+  TFile *fout = new TFile(cmdline.value<string>("-output", "corPP.root").c_str(), "RECREATE");
   int user_pt = cmdline.value<int>("-pt",1); 
 
   // Uncomment to silence fastjet banner
@@ -75,23 +75,16 @@ int main (int argc, char ** argv) {
 
     vector<double> eventWeight;
     eventWeight.push_back(mixer.hard_weight());
-    eventWeight.push_back(mixer.pu_weight());
 
     fastjet::Selector sig_selector = SelectorVertexNumber(0);
     vector<PseudoJet> particlesSig = sig_selector(particlesMergedAll);
-
-    fastjet::Selector bkg_selector = SelectorVertexNumber(1);
-    vector<PseudoJet> particlesBkg = bkg_selector(particlesMergedAll);
-
-    vector<PseudoJet> particlesMerged = particlesBkg;
-    particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
     
     //std::cout << "#merged: " << particlesMerged.size() << "  signal: " << particlesSig.size() << "  bkg: " << particlesBkg.size() << std::endl;
     //vector<PseudoJet> particlesMerged = particlesMergedAll;
     //---------------------------------------------------------------------------
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea csSig(particlesMerged, jet_def, area_def);
+    fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
     jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     //calculate some angularities
