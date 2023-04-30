@@ -127,9 +127,11 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
 
     tree->GetEntry(event_number);
         for (unsigned int j = 0; j < _pt->size(); j++) {
-            pt  = _pt->at(j);
+            pt  = abs(_pt->at(j));
             eta = _eta->at(j); //PSEUDO-rapidity
             phi = _phi->at(j);
+
+            std::cout << "Pt: " << pt << std::endl;
 
             float E = sqrt(pt*cos(phi)*pt*cos(phi)+pt*sin(phi)*pt*sin(phi)+pt*sinh(eta)*pt*sinh(eta)+mass*mass);
 
