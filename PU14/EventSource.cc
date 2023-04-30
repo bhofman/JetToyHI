@@ -131,8 +131,6 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
             eta = _eta->at(j); //PSEUDO-rapidity
             phi = _phi->at(j);
 
-            std::cout << "Pt: " << pt << std::endl;
-
             float E = sqrt(pt*cos(phi)*pt*cos(phi)+pt*sin(phi)*pt*sin(phi)+pt*sinh(eta)*pt*sinh(eta)+mass*mass);
 
             PseudoJet particle = PseudoJet(pt*cos(phi),pt*sin(phi),pt*sinh(eta),E); //px,py,pz,E
