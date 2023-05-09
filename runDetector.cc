@@ -44,7 +44,7 @@ int main (int argc, char ** argv) {
 
   //Jet definition
   double ghostRapMax         = 1.0;
-  double ghost_area          = 0.005;
+  double ghost_area          = 0.5;
   int    active_area_repeats = 1;
   GhostedAreaSpec ghost_spec(ghostRapMax, active_area_repeats, ghost_area);
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
@@ -72,14 +72,12 @@ int main (int argc, char ** argv) {
 
     vector<PseudoJet> particlesSig = mixer.particles();
 
-    vector<double> eventWeight;
-    eventWeight.push_back(mixer.hard_weight());
-
     //---------------------------------------------------------------------------
     //   fastsim
     //---------------------------------------------------------------------------
     fastSim.setInputEvent(particlesSig);
     vector<PseudoJet> truth = fastSim.AliceAcceptance();
+    for (auto x : truth) std::cout << x.pt() << std::endl;
     vector<PseudoJet> detector = fastSim.AliceDetector();
 
     //---------------------------------------------------------------------------
@@ -91,34 +89,34 @@ int main (int argc, char ** argv) {
     jetCollection jetCollectionSig_Truth_smaller(sorted_by_pt(jet_selector(sigTruth_smaller.inclusive_jets(10.))));
 
     fastjet::ClusterSequenceArea sigDetector_smaller(detector, jet_def_smaller, area_def);
-    jetCollection jetCollectionSig_Detector_smaller(sorted_by_pt(jet_selector(sigDetector_smaller.inclusive_jets(10.))));
+    jetCollection jetCollectionSig_Detector_smaller(sorted_by_pt(jet_selector(sigDetector_smaller.inclusive_jets(1.))));
 
     //match truth and detector jets
-    jetMatcher jetMatch_smaller(R);
+    jetMatcher jetMatch_smaller(0.2);
     jetMatch_smaller.setBaseJets(jetCollectionSig_Detector_smaller);
     jetMatch_smaller.setTagJets(jetCollectionSig_Truth_smaller);
     jetMatch_smaller.matchJets();
     jetMatch_smaller.reorderedToTag(jetCollectionSig_Detector_smaller);
 
     //---------------------------------------------------------------------------
-    //   jet clustering of small R
+    //   jet clustering of big R
     //---------------------------------------------------------------------------
     JetDefinition jet_def_bigger(antikt_algorithm, R+0.05);
 
     fastjet::ClusterSequenceArea sigTruth_bigger(truth, jet_def_bigger, area_def);
-    jetCollection jetCollectionSig_Truth_bigger(sorted_by_pt(jet_selector(sigTruth_bigger.inclusive_jets(10.))));
+    jetCollection jetCollectionSig_Truth_bigger(sorted_by_pt(jet_selector(sigTruth_bigger.inclusive_jets(1.))));
 
     fastjet::ClusterSequenceArea sigDetector_bigger(detector, jet_def_bigger, area_def);
-    jetCollection jetCollectionSig_Detector_bigger(sorted_by_pt(jet_selector(sigDetector_bigger.inclusive_jets(10.))));
+    jetCollection jetCollectionSig_Detector_bigger(sorted_by_pt(jet_selector(sigDetector_bigger.inclusive_jets(1.))));
 
     //match bigger to smaller jets
-    jetMatcher jetMatch_bigger_Truth(R+0.05);
+    jetMatcher jetMatch_bigger_Truth(0.2);
     jetMatch_bigger_Truth.setBaseJets(jetCollectionSig_Truth_bigger);
     jetMatch_bigger_Truth.setTagJets(jetCollectionSig_Truth_smaller);
     jetMatch_bigger_Truth.matchJets();
     jetMatch_bigger_Truth.reorderedToTag(jetCollectionSig_Truth_bigger);
 
-    jetMatcher jetMatch_bigger_Detector(R+0.05);
+    jetMatcher jetMatch_bigger_Detector(0.2);
     jetMatch_bigger_Detector.setBaseJets(jetCollectionSig_Detector_bigger);
     jetMatch_bigger_Detector.setTagJets(jetCollectionSig_Detector_smaller);
     jetMatch_bigger_Detector.matchJets();
@@ -127,8 +125,6 @@ int main (int argc, char ** argv) {
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
-    trw.addCollection("eventWeight",   eventWeight);
-
     trw.addCollection("sigJet_Truth_smaller",        jetCollectionSig_Truth_smaller);
     trw.addCollection("sigJet_Truth_bigger",        jetCollectionSig_Truth_bigger);
     trw.addCollection("sigJet_Detector_smaller",        jetCollectionSig_Detector_smaller);
