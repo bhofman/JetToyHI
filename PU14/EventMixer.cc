@@ -19,7 +19,7 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
   _hard_varname   = _cmdline->value<string>("-hardvarname", "particle_gen");
   _hard_treename   = _cmdline->value<string>("-hardtreename", "AliAnalysisTaskTrackSkim_tree");
 
-  _reco_name   = _cmdline->value<string>("-reco");
+  _reco_name   = _cmdline->value<string>("-reco","");
   _reco_type   = _cmdline->value<string>("-recotype", "PU14");
   _reco_varname   = _cmdline->value<string>("-recovarname", "particle_data");
   _reco_treename   = _cmdline->value<string>("-recotreename", "AliAnalysisTaskTrackSkim_tree");
