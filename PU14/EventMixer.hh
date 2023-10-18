@@ -71,12 +71,12 @@ public:
 
 private:
   CmdLine * _cmdline;
-  std::string _hard_name, _pileup_name;
-  std::string _hard_type, _pileup_type;
-  std::string _hard_varname, _pileup_varname;
-  std::string _hard_treename, _pileup_treename;
+  std::string _hard_name, _pileup_name, _reco_name;
+  std::string _hard_type, _pileup_type, _reco_type;
+  std::string _hard_varname, _pileup_varname, _reco_varname;
+  std::string _hard_treename, _pileup_treename, _reco_treename;
 
-  fastjet::SharedPtr<EventSource> _hard, _pileup;
+  fastjet::SharedPtr<EventSource> _hard, _pileup, _reco;
   int _npu;
   // GSLRandom _rng;
   double _chs_rescaling_factor;

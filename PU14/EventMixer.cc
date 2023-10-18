@@ -15,12 +15,18 @@ using namespace std;
 EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
 
   _hard_name   = _cmdline->value<string>("-hard");
-  _pileup_name = _cmdline->value<string>("-pileup", "");
   _hard_type   = _cmdline->value<string>("-hardtype", "PU14");
-  _pileup_type = _cmdline->value<string>("-pileuptype", "PU14");
-  _hard_varname   = _cmdline->value<string>("-hardvarname", "particle_");
-  _pileup_varname = _cmdline->value<string>("-pileupvarname", "particle_");
+  _hard_varname   = _cmdline->value<string>("-hardvarname", "particle_gen");
   _hard_treename   = _cmdline->value<string>("-hardtreename", "AliAnalysisTaskTrackSkim_tree");
+
+  _reco_name   = _cmdline->value<string>("-reco");
+  _reco_type   = _cmdline->value<string>("-recotype", "PU14");
+  _reco_varname   = _cmdline->value<string>("-recovarname", "particle_data");
+  _reco_treename   = _cmdline->value<string>("-recotreename", "AliAnalysisTaskTrackSkim_tree");
+
+  _pileup_name = _cmdline->value<string>("-pileup", "");
+  _pileup_type = _cmdline->value<string>("-pileuptype", "PU14");
+  _pileup_varname = _cmdline->value<string>("-pileupvarname", "particle_");
   _pileup_treename = _cmdline->value<string>("-pileuptreename", "AliAnalysisTaskTrackSkim_tree");
 
   // setting the multiplicity of pileup events (background HI)
@@ -46,6 +52,14 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
   _hard  .reset(new EventSource(_hard_name  , _hard_type , _hard_varname , _hard_treename));
   _hard->Recycle = false;
 
+  if (_reco_name.empty()){
+    cerr << "INFO: no detector level requested" << endl;
+    _reco.reset();
+  } else {
+    _reco.reset(new EventSource(_reco_name, _reco_type , _reco_varname , _reco_treename));
+    _reco->Recycle = false;
+  }
+
   if (_pileup_name.empty()){
     cerr << "INFO: no background requested" << endl;
     _pileup.reset();
@@ -62,10 +76,15 @@ bool EventMixer::next_event() {
   _hard_event_weight = 1;
   _pu_event_weight = 1;
   
-  // first get the hard event
+  // first get the hard event ( truth level )
   if (! _hard->append_next_event(_particles,_hard_event_weight,0)) return false;
 
   unsigned hard_size = _particles.size();
+
+  // add detector level event if available
+  if (_reco.get()){
+      if (! _reco->append_next_event(_particles,_pu_event_weight,99)) std::cout << "Empty reco event" << std::endl; //return false;
+  }
   
   // add pileup if available
   if (_pileup.get()){
@@ -88,7 +107,6 @@ bool EventMixer::next_event() {
 
   return true;
 }
-
 
 //----------------------------------------------------------------------
 string EventMixer::description() const {

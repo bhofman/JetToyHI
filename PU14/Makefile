@@ -1,5 +1,5 @@
 
-# Makefile generated automatically by ../scripts/mkcxx.pl '-a' 'PU14' '-f' '-s' '-1'
+# Makefile generated automatically by ../scripts/mkcxx.pl '-a' 'PU14' '-f' '-s' '-1' '-r'
 # run 'make make' to update it if you add new files
 
 CXX = g++  # for macs - otherwise get c++ = clang
@@ -20,6 +20,9 @@ LIBRARIES += -L/usr/lib/x86_64-linux-gnu -lgsl -lgslcblas -lm
 
 INCLUDE += -I/usr/include
 
+
+INCLUDE += `root-config --cflags`
+LIBRARIES  += `root-config --glibs`
 INCLUDE += $(LCLINCLUDE)
 
 COMMONSRC = CmdLine.cc EventMixer.cc EventSource.cc helpers.cc ParticleIDMethods.cc ParticleName.cc PU14.cc Version.cc zfstream.cc
@@ -42,7 +45,7 @@ libPU14.a: $(COMMONOBJ)
 
 
 make:
-	../scripts/mkcxx.pl '-a' 'PU14' '-f' '-s' '-1'
+	../scripts/mkcxx.pl '-a' 'PU14' '-f' '-s' '-1' '-r'
 
 clean:
 	rm -vf $(COMMONOBJ) $(PROGOBJ)
@@ -69,8 +72,8 @@ depend:
 CmdLine.o: CmdLine.hh
 EventMixer.o: EventMixer.hh CmdLine.hh EventSource.hh PU14.hh
 EventMixer.o: HepPID/ParticleIDMethods.hh helpers.hh
-EventSource.o: EventSource.hh FastIStringStream.hh PU14.hh
-EventSource.o: HepPID/ParticleIDMethods.hh zfstream.h
+EventSource.o: EventSource.hh PU14.hh HepPID/ParticleIDMethods.hh
+EventSource.o: FastIStringStream.hh zfstream.h
 helpers.o: helpers.hh
 ParticleIDMethods.o: HepPID/ParticleIDMethods.hh HepPID/ParticleName.hh
 ParticleName.o: HepPID/ParticleName.hh HepPID/ParticleIDMethods.hh
