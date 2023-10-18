@@ -53,8 +53,9 @@ int main (int argc, char ** argv) {
   GhostedAreaSpec ghost_spec(ghostRapMax, active_area_repeats, ghost_area);
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
 
-  double jetRapMax = 0.5;
-  Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
+  //double jetRapMax = 0.5;
+  Selector jet_selector_truth = SelectorAbsEtaMax(1.0);
+  Selector jet_selector_detector = SelectorAbsEtaMax(0.5);
 
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle(-1);
@@ -75,42 +76,82 @@ int main (int argc, char ** argv) {
     Bar.PrintWithMod(entryDiv);
 
     //---------------------------------------------------------------------------
-    //   Embedding
+    //   Defining data samples
     //---------------------------------------------------------------------------
     vector<PseudoJet> particlesMergedAll = mixer.particles();
 
-    vector<double> eventWeight;
-    eventWeight.push_back(mixer.hard_weight());
-    eventWeight.push_back(mixer.pu_weight());
+    // Truth event
+    fastjet::Selector hard_selector = SelectorVertexNumber(0);
+    vector<PseudoJet> particlesHard = hard_selector(particlesMergedAll);
 
-    fastjet::Selector sig_selector = SelectorVertexNumber(0);
-    vector<PseudoJet> particlesSig = sig_selector(particlesMergedAll);
+    // Detector event
+    fastjet::Selector reco_selector = SelectorVertexNumber(99);
+    vector<PseudoJet> particlesReco = reco_selector(particlesMergedAll);
 
-    thermalEvent thrm(1000,0.7, -3.0, 3.0, 0.5);
-    vector<PseudoJet> particlesBkg = thrm.createThermalEvent();
+    // Pileup event
+    fastjet::Selector bkg_selector = SelectorVertexNumber(1);
+    vector<PseudoJet> particlesBkg = bkg_selector(particlesMergedAll);
 
-    vector<PseudoJet> particlesMerged = particlesBkg;
-    particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
+    vector<PseudoJet> particlesEmbedded = particlesBkg;
+    particlesEmbedded.insert( particlesEmbedded.end(), particlesReco.begin(), particlesReco.end() );
 
+    //---------------------------------------------------------------------------
+    //   jet clustering of 3 samples
+    //---------------------------------------------------------------------------
+    /*
+    JetDefinition jet_def(antikt_algorithm, R);
+    fastjet::ClusterSequenceArea jets_Truth(particlesHard, jet_def, area_def);
+    jetCollection jetCollection_Truth(sorted_by_pt(jet_selector(jets_Truth.inclusive_jets(10.))));
+    trw.addCollection("jetCollection_Truth_",        jetCollection_Truth);
+
+    fastjet::ClusterSequenceArea jets_Reco(particlesReco, jet_def, area_def);
+    jetCollection jetCollection_Reco(sorted_by_pt(jet_selector(jets_Reco.inclusive_jets(10.))));
+    trw.addCollection("jetCollection_Reco_",        jetCollection_Reco);
+
+    // Randomly reject for PbPb kinematic efficiency
+
+    fastjet::ClusterSequenceArea jets_MB(particlesBkg, jet_def, area_def);
+    jetCollection jetCollection_MB(sorted_by_pt(jet_selector(jets_MB.inclusive_jets(10.))));
+    trw.addCollection("jetCollection_MB_",        jetCollection_MB);
+
+    fastjet::ClusterSequenceArea jets_Embedded(particlesEmbedded, jet_def, area_def);
+    jetCollection jetCollection_Embedded(sorted_by_pt(jet_selector(jets_Embedded.inclusive_jets(10.))));
+    trw.addCollection("jetCollection_Embedded_",        jetCollection_Embedded);
+    */
     //---------------------------------------------------------------------------
     //   jet clustering of TRUTH small R
     //---------------------------------------------------------------------------
     JetDefinition jet_def_smaller(antikt_algorithm, R);
+    fastjet::ClusterSequenceArea sigTruth_smaller(particlesHard, jet_def_smaller, area_def);
+    jetCollection jetCollectionSig_Truth_smaller(sorted_by_pt(jet_selector_truth(sigTruth_smaller.inclusive_jets(8.))));
 
-    fastjet::ClusterSequenceArea sigTruth_smaller(particlesSig, jet_def_smaller, area_def);
-    jetCollection jetCollectionSig_Truth_smaller(sorted_by_pt(jet_selector(sigTruth_smaller.inclusive_jets(10.))));
-
-    trw.addCollection("sigJet_beforeMatch_Truth_smaller",        jetCollectionSig_Truth_smaller);
+    vector<double> TrackOver8GeV_Truth_smaller;      TrackOver8GeV_Truth_smaller.reserve(jetCollectionSig_Truth_smaller.getJet().size());
+    double found;
+    for(fastjet::PseudoJet jet : jetCollectionSig_Truth_smaller.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        TrackOver8GeV_Truth_smaller.push_back(found);
+      }
+    }
+    jetCollectionSig_Truth_smaller.addVector("TrackOver8GeV_Truth_smaller", TrackOver8GeV_Truth_smaller);
+    
+    trw.addCollection("sigJet_Truth_smaller",        jetCollectionSig_Truth_smaller);
 
     //---------------------------------------------------------------------------
     //   jet clustering of THERMAL small R
     //---------------------------------------------------------------------------
-    csSubFullEventIterative csSubFullSmall( {0.} , {.25}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
-    csSubFullSmall.setInputParticles(particlesMerged);
+    csSubFullEventIterative csSubFullSmall( {0.} , {.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullSmall.setInputParticles(particlesEmbedded);
     csSubFullSmall.setMaxEta(1.);
     csSubFullSmall.setBackgroundGrid();
     fastjet::ClusterSequenceArea sigThermal_smaller(csSubFullSmall.doSubtractionFullEvent(), jet_def_smaller, area_def);
-    jetCollection csFullJets(sorted_by_pt(jet_selector(sigThermal_smaller.inclusive_jets(1.))));  
+    jetCollection csFullJets(sorted_by_pt(jet_selector_detector(sigThermal_smaller.inclusive_jets(1.))));  
     
 
     // Make sure our groomed jets have constituents
@@ -122,7 +163,7 @@ int main (int argc, char ** argv) {
 
     jetCollection jetCollectionSig_Thermal_smaller(csFullJetsClean);
 
-    trw.addCollection("sigJet_beforeMatch_Thermal_smaller",        jetCollectionSig_Thermal_smaller);
+    trw.addCollection("sigJet_Thermal_smaller_beforeMatching",        jetCollectionSig_Thermal_smaller);
 
     //match CSFull jets to signal jets
     jetMatcher jmCSFull(0.2);
@@ -131,15 +172,33 @@ int main (int argc, char ** argv) {
     jmCSFull.matchJets();
     jmCSFull.reorderedToTag(jetCollectionSig_Thermal_smaller);   
 
+    vector<double> TrackOver8GeV_Thermal_smaller;      TrackOver8GeV_Thermal_smaller.reserve(jetCollectionSig_Thermal_smaller.getJet().size());
+    double found;
+    for(fastjet::PseudoJet jet : jetCollectionSig_Thermal_smaller.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        TrackOver8GeV_Thermal_smaller.push_back(found);
+      }
+    }
+    jetCollectionSig_Thermal_smaller.addVector("TrackOver8GeV_Thermal_smaller", TrackOver8GeV_Thermal_smaller);
+
+    trw.addCollection("sigJet_Thermal_smaller",        jetCollectionSig_Thermal_smaller);
+
     //---------------------------------------------------------------------------
     //   jet clustering TRUTH of big R
     //---------------------------------------------------------------------------
     JetDefinition jet_def_bigger(antikt_algorithm, R+0.05);
 
-    fastjet::ClusterSequenceArea sigTruth_bigger(particlesSig, jet_def_bigger, area_def);
-    jetCollection jetCollectionSig_Truth_bigger(sorted_by_pt(jet_selector(sigTruth_bigger.inclusive_jets(1.))));
+    fastjet::ClusterSequenceArea sigTruth_bigger(particlesHard, jet_def_bigger, area_def);
+    jetCollection jetCollectionSig_Truth_bigger(sorted_by_pt(jet_selector_truth(sigTruth_bigger.inclusive_jets(8.))));
 
-    trw.addCollection("sigJet_beforeMatch_Truth_bigger",        jetCollectionSig_Truth_bigger);
+    trw.addCollection("sigJet_Truth_bigger_beforeMatching",        jetCollectionSig_Truth_bigger);
 
     //match bigger to smaller jets
     jetMatcher jetMatch_bigger_Truth(0.2);
@@ -147,16 +206,34 @@ int main (int argc, char ** argv) {
     jetMatch_bigger_Truth.setTagJets(jetCollectionSig_Truth_smaller);
     jetMatch_bigger_Truth.matchJets();
     jetMatch_bigger_Truth.reorderedToTag(jetCollectionSig_Truth_bigger);
+
+    vector<double> TrackOver8GeV_Truth_bigger;      TrackOver8GeV_Truth_bigger.reserve(jetCollectionSig_Truth_bigger.getJet().size());
+    double found;
+    for(fastjet::PseudoJet jet : jetCollectionSig_Truth_bigger.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        TrackOver8GeV_Truth_bigger.push_back(found);
+      }
+    }
+    jetCollectionSig_Truth_bigger.addVector("TrackOver8GeV_Truth_bigger", TrackOver8GeV_Truth_bigger);
+
+    trw.addCollection("sigJet_Truth_bigger",        jetCollectionSig_Truth_bigger);
     
     //---------------------------------------------------------------------------
     //   jet clustering of THERMAL bigger R
     //---------------------------------------------------------------------------
-    csSubFullEventIterative csSubFullBig( {0.} , {.25}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFullEventIterative csSubFullBig( {0.} , {.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
     csSubFullBig.setInputParticles(particlesMerged);
     csSubFullBig.setMaxEta(1.);
     csSubFullBig.setBackgroundGrid();
     fastjet::ClusterSequenceArea sigThermal_bigger(csSubFullBig.doSubtractionFullEvent(), jet_def_bigger, area_def);
-    jetCollection csFullJetsBig(sorted_by_pt(jet_selector(sigThermal_bigger.inclusive_jets(1.))));   
+    jetCollection csFullJetsBig(sorted_by_pt(jet_selector_detector(sigThermal_bigger.inclusive_jets(8.))));   
 
     // Make sure our groomed jets have constituents
     std::vector<fastjet::PseudoJet> csFullJetsCleanBig;
@@ -167,7 +244,7 @@ int main (int argc, char ** argv) {
 
     jetCollection jetCollectionSig_Thermal_bigger(csFullJetsCleanBig);
 
-    trw.addCollection("sigJet_beforeMatch_Thermal_bigger",        jetCollectionSig_Thermal_bigger);
+    trw.addCollection("sigJet_Thermal_bigger_beforeMatching",        jetCollectionSig_Thermal_bigger);
 
     //match CSFull jets to signal jets
     jetMatcher jetMatch_bigger_Thermal(0.2);
@@ -176,13 +253,27 @@ int main (int argc, char ** argv) {
     jetMatch_bigger_Thermal.matchJets();
     jetMatch_bigger_Thermal.reorderedToTag(jetCollectionSig_Thermal_bigger);  
 
+    vector<double> TrackOver8GeV_Thermal_bigger;      TrackOver8GeV_Thermal_bigger.reserve(jetCollectionSig_Thermal_bigger.getJet().size());
+    double found;
+    for(fastjet::PseudoJet jet : jetCollectionSig_Thermal_bigger.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        TrackOver8GeV_Thermal_bigger.push_back(found);
+      }
+    }
+    jetCollectionSig_Thermal_bigger.addVector("TrackOver8GeV_Thermal_bigger", TrackOver8GeV_Thermal_bigger);
+
+    trw.addCollection("sigJet_Thermal_bigger",        jetCollectionSig_Thermal_bigger);
+
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
-    trw.addCollection("sigJet_afterMatch_Truth_smaller",        jetCollectionSig_Truth_smaller);
-    trw.addCollection("sigJet_afterMatch_Truth_bigger",        jetCollectionSig_Truth_bigger);
-    trw.addCollection("sigJet_afterMatch_Thermal_smaller",        jetCollectionSig_Thermal_smaller);
-    trw.addCollection("sigJet_afterMatch_Thermal_bigger",        jetCollectionSig_Thermal_bigger);
 
     trw.fillTree();
 
