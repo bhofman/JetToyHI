@@ -173,7 +173,6 @@ int main (int argc, char ** argv) {
     jmCSFull.reorderedToTag(jetCollectionSig_Thermal_smaller);   
 
     vector<double> TrackOver8GeV_Thermal_smaller;      TrackOver8GeV_Thermal_smaller.reserve(jetCollectionSig_Thermal_smaller.getJet().size());
-    double found;
     for(fastjet::PseudoJet jet : jetCollectionSig_Thermal_smaller.getJet()) {
       if(jet.has_constituents()) {
         found = 0;
@@ -208,7 +207,6 @@ int main (int argc, char ** argv) {
     jetMatch_bigger_Truth.reorderedToTag(jetCollectionSig_Truth_bigger);
 
     vector<double> TrackOver8GeV_Truth_bigger;      TrackOver8GeV_Truth_bigger.reserve(jetCollectionSig_Truth_bigger.getJet().size());
-    double found;
     for(fastjet::PseudoJet jet : jetCollectionSig_Truth_bigger.getJet()) {
       if(jet.has_constituents()) {
         found = 0;
@@ -229,7 +227,7 @@ int main (int argc, char ** argv) {
     //   jet clustering of THERMAL bigger R
     //---------------------------------------------------------------------------
     csSubFullEventIterative csSubFullBig( {0.} , {.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
-    csSubFullBig.setInputParticles(particlesMerged);
+    csSubFullBig.setInputParticles(particlesEmbedded);
     csSubFullBig.setMaxEta(1.);
     csSubFullBig.setBackgroundGrid();
     fastjet::ClusterSequenceArea sigThermal_bigger(csSubFullBig.doSubtractionFullEvent(), jet_def_bigger, area_def);
@@ -254,7 +252,6 @@ int main (int argc, char ** argv) {
     jetMatch_bigger_Thermal.reorderedToTag(jetCollectionSig_Thermal_bigger);  
 
     vector<double> TrackOver8GeV_Thermal_bigger;      TrackOver8GeV_Thermal_bigger.reserve(jetCollectionSig_Thermal_bigger.getJet().size());
-    double found;
     for(fastjet::PseudoJet jet : jetCollectionSig_Thermal_bigger.getJet()) {
       if(jet.has_constituents()) {
         found = 0;
