@@ -73,6 +73,7 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
 //----------------------------------------------------------------------
 bool EventMixer::next_event() {
   _particles.resize(0);
+  _particles.clear();
   _hard_event_weight = 1;
   _pu_event_weight = 1;
   

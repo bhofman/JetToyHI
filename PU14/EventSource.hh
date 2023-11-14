@@ -18,6 +18,13 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#include "TObject.h"
+#include "TObjectTable.h"
+
+#include "TTreeReader.h"
+#include "TTreeReaderValue.h"
+#include "TTreeReaderArray.h"
+
 class EventHepMC3;
 class EventHepMC2;
 class EventList;
@@ -457,19 +464,23 @@ public:
     TTree *tree;
     
     int event_number;
-    std::vector<float>* _pt = 0;
-    std::vector<float>* _eta = 0;
-    std::vector<float>* _phi = 0;
+    int events_in_tree;
+    std::vector<double>* _pt  = 0;
+    std::vector<double>* _eta = 0;
+    std::vector<double>* _phi = 0;
 
    EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename)
    {
       if(type == "ROOT"){
         f = new TFile(filename.c_str(),"READ");
+        //TTreeReader myReader("ntuple", myFile);
         tree = (TTree*)f->Get(treename.c_str());
+        //tree->SetAutoFlush(0);
         event_number = 0;
         tree->SetBranchAddress((varname+"_pt").c_str(), &_pt);
         tree->SetBranchAddress((varname+"_eta").c_str(), &_eta);
         tree->SetBranchAddress((varname+"_phi").c_str(), &_phi);
+        events_in_tree = tree->GetEntries();
       }
       else
         open_stream(filename);

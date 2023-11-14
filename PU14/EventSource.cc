@@ -115,29 +115,29 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
     unsigned original_size = particles.size();
     event_weight = 1;
 
-    if (event_number >= tree->GetEntries()) {
+    if (event_number >= events_in_tree){
         std::cout << "No more events in the tree" << std::endl;
         f->Close();
         return (particles.size() != original_size);
     }
 
-    PseudoJet particle;
     double pt, eta, phi;
-    float mass = 0.139; // pion mass
+    double mass = 0.139; // pion mass
 
     tree->GetEntry(event_number);
-        for (unsigned int j = 0; j < _pt->size(); j++) {
-            pt  = abs(_pt->at(j));
-            eta = _eta->at(j); //PSEUDO-rapidity
-            phi = _phi->at(j);
+    particles.reserve(_pt->size());
+    for (unsigned int j = 0; j < _pt->size(); j++) {
+        pt  = abs(_pt->at(j));
+        eta = _eta->at(j); //PSEUDO-rapidity
+        phi = _phi->at(j);
 
-            float E = sqrt(pt*cos(phi)*pt*cos(phi)+pt*sin(phi)*pt*sin(phi)+pt*sinh(eta)*pt*sinh(eta)+mass*mass);
+        double E = sqrt(pt*cos(phi)*pt*cos(phi)+pt*sin(phi)*pt*sin(phi)+pt*sinh(eta)*pt*sinh(eta)+mass*mass);
 
-            PseudoJet particle = PseudoJet(pt*cos(phi),pt*sin(phi),pt*sinh(eta),E); //px,py,pz,E
-            particle.set_user_info(new PU14(0, 0, vertex_number));
-            
-            particles.push_back(particle);
-        }
+        PseudoJet particle = PseudoJet(pt*cos(phi),pt*sin(phi),pt*sinh(eta),E); //px,py,pz,E
+        particle.set_user_info(new PU14(0, 0, vertex_number)); // make outside of loop and pass same to all tracks, see if it is a problem to new in loop
+        
+        particles.push_back(particle);
+    }
 
     event_number = event_number + 1;
 
