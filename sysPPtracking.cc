@@ -29,7 +29,7 @@ int main (int argc, char ** argv) {
   cout << "will run on " << nEvent << " events" << endl;
 
   TFile *fout = new TFile(cmdline.value<string>("-output", "sysTracking.root").c_str(), "RECREATE");
-  int user_pt = cmdline.value<int>("-pt",1); 
+  int user_pt = cmdline.value<int>("-pt",10); 
 
   // Uncomment to silence fastjet banner
   ClusterSequence::set_fastjet_banner_stream(NULL);
@@ -46,7 +46,7 @@ int main (int argc, char ** argv) {
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
 
-  double jetRapMax = 2.0;
+  double jetRapMax = 1.5;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
@@ -78,12 +78,12 @@ int main (int argc, char ** argv) {
     vector<double> eventWeight;
     eventWeight.push_back(mixer.hard_weight());
 
-    // run as --hard DETECTOR
-    fastjet::Selector detector_selector = SelectorVertexNumber(0);
+    // run as --reco
+    fastjet::Selector detector_selector = SelectorVertexNumber(99);
     vector<PseudoJet> particlesDetector = detector_selector(particlesMergedAll);
 
-    // run as --pileup TRUTH
-    fastjet::Selector truth_selector = SelectorVertexNumber(1);
+    // run as --hard
+    fastjet::Selector truth_selector = SelectorVertexNumber(0);
     vector<PseudoJet> particlesTruth = truth_selector(particlesMergedAll);
     
     // Randomly reject 3% of tracks
@@ -100,7 +100,7 @@ int main (int argc, char ** argv) {
     //   jet clustering of Detector jets
     //---------------------------------------------------------------------------
     fastjet::ClusterSequenceArea csDetector(particlesReducedTracking, jet_def, area_def);
-    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(10.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     vector<double> TrackOver100GeV;      TrackOver100GeV.reserve(jetCollectionDetector.getJet().size());
     double found;
@@ -152,7 +152,7 @@ int main (int argc, char ** argv) {
         z1_theta2_truth.push_back(Angularity_z1_theta2.result(jet));
       }
     }
-    jetCollectionTruthMatched.addVector("Truth_z1_theta2", z1_theta2_truth);
+    jetCollectionTruthMatched.addVector("Truth_z1_theta2", z1_theta2_truth); // This is matched to detector jets
     
     //---------------------------------------------------------------------------
     //   write tree

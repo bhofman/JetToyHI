@@ -46,7 +46,7 @@ int main (int argc, char ** argv) {
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
 
-  double jetRapMax = 0.5;
+  double jetRapMax = 1.5;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
@@ -90,7 +90,7 @@ int main (int argc, char ** argv) {
     //   jet clustering of signal jets
     //---------------------------------------------------------------------------
     fastjet::ClusterSequenceArea csSig(particlesSig, jet_def, area_def);
-    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(5.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionSig(sorted_by_pt(jet_selector(csSig.inclusive_jets(10.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
         
     //calculate some angularities
@@ -131,7 +131,7 @@ int main (int argc, char ** argv) {
     csSubFull.setInputParticles(particlesMerged);
     csSubFull.setMaxEta(3.);
     fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(user_pt)))); 
+    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(10.)))); 
     
     //match CSFull jets to signal jets
     jetMatcher jmCSFull(R);

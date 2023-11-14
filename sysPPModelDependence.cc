@@ -47,7 +47,7 @@ int main (int argc, char ** argv) {
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
 
-  double jetRapMax = 2.0;
+  double jetRapMax = 1.5;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
@@ -92,7 +92,7 @@ int main (int argc, char ** argv) {
     //   jet clustering of Detector jets
     //---------------------------------------------------------------------------
     fastjet::ClusterSequenceArea csDetector(particlesDetector, jet_def, area_def);
-    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(user_pt)))); // Inclusive jets to take a jets with pt over (pt_min)
+    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(10.)))); // Inclusive jets to take a jets with pt over (pt_min)
 
     vector<double> TrackOver100GeV;      TrackOver100GeV.reserve(jetCollectionDetector.getJet().size());
     double found;
