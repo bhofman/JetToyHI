@@ -10,10 +10,11 @@
 #include "PU14/PU14.hh"
 #include "include/extraInfo.hh"
 #include "include/jetCollection.hh"
-#include "include/softDropGroomer.hh"
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
 #include "include/Angularity.hh"
+
+
 
 using namespace std;
 using namespace fastjet;
@@ -28,7 +29,7 @@ int main (int argc, char ** argv) {
   cout << "will run on " << nEvent << " events" << endl;
 
   TFile *fout = new TFile(cmdline.value<string>("-output", "PPMC.root").c_str(), "RECREATE");
-  int user_pt = cmdline.value<int>("-pt",1); 
+  int user_pt = cmdline.value<int>("-pt",10); 
 
   // Uncomment to silence fastjet banner
   ClusterSequence::set_fastjet_banner_stream(NULL);
@@ -37,7 +38,7 @@ int main (int argc, char ** argv) {
   treeWriter trw("jetTree");
 
   //Jet definition
-  double R                   = 0.4;
+  double R                   = 0.2;
   double ghostRapMax         = 6.0;
   double ghost_area          = 0.005;
   int    active_area_repeats = 1;     
@@ -49,15 +50,14 @@ int main (int argc, char ** argv) {
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
-  Angularity Angularity_z1_theta1(1.0,1.,R);
   Angularity Angularity_z1_theta2(2.0,1.,R);
-  Angularity Angularity_z2_theta1(1.0,2.,R);
-  Angularity Angularity_z2_theta2(2.0,2.,R);
 
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle((nEvent == -1 ? 7 : -1));
 
   EventMixer mixer(&cmdline);  //the mixing machinery from PU14 workshop
+
+
 
   // loop over events
   int iev = 0;
@@ -82,6 +82,16 @@ int main (int argc, char ** argv) {
     // run as --hard
     fastjet::Selector truth_selector = SelectorVertexNumber(0);
     vector<PseudoJet> particlesTruth = truth_selector(particlesMergedAll);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     //---------------------------------------------------------------------------
     //   jet clustering of Detector jets
