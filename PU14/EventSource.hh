@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include <istream>
+#include <iostream>
 #include <memory>
 #include <map>
 #include "fastjet/PseudoJet.hh"
@@ -20,10 +20,6 @@
 
 #include "TObject.h"
 #include "TObjectTable.h"
-
-#include "TTreeReader.h"
-#include "TTreeReaderValue.h"
-#include "TTreeReaderArray.h"
 
 class EventHepMC3;
 class EventHepMC2;
@@ -458,8 +454,6 @@ class EventSource
 public:
     enum FileType {Pu14, HepMC2, HepMC3, ROOT, Unknown};
 
-    bool Recycle;
-
     TFile *f;
     TTree *tree;
     
@@ -469,11 +463,11 @@ public:
     std::vector<double>* _eta = 0;
     std::vector<double>* _phi = 0;
 
-   EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename)
+   EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename, bool _recycle = false)
    {
+      Recycle = _recycle;
       if(type == "ROOT"){
         f = new TFile(filename.c_str(),"READ");
-        //TTreeReader myReader("ntuple", myFile);
         tree = (TTree*)f->Get(treename.c_str());
         //tree->SetAutoFlush(0);
         event_number = 0;
@@ -495,7 +489,6 @@ public:
          Type = FileType::ROOT;
       else
          Type = FileType::Unknown;
-      Recycle = false;
    }
 
    /// set up an event stream from the corresponding file (in the PU14 format) 
@@ -504,7 +497,7 @@ public:
    /// appends the particles from the next event that is read onto the 
    /// particles vector.
    bool append_next_event(std::vector<fastjet::PseudoJet> & particles,
-         double &event_weight, int vertex_number = 0);
+         double &event_weight, int vertex_number = 0, bool Recycle = false );
    bool append_next_event_pu14(std::vector<fastjet::PseudoJet> & particles,
          double &event_weight, int vertex_number = 0);
    bool append_next_event_hepmc2(std::vector<fastjet::PseudoJet> & particles,
@@ -512,12 +505,14 @@ public:
    bool append_next_event_hepmc3(std::vector<fastjet::PseudoJet> & particles,
          double &event_weight, int vertex_number = 0);
    bool append_next_event_ROOT(std::vector<fastjet::PseudoJet> & particles,
-         double &event_weight, int vertex_number = 0);
+         double &event_weight, int vertex_number = 0, bool Recycle = false);
 
 private:
    std::istream * _stream;
    fastjet::SharedPtr<std::istream> _stream_auto;
    FileType Type;
+
+   bool Recycle;
 
    EventHepMC2 Event2;
    EventHepMC3 Event3;

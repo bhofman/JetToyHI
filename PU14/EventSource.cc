@@ -36,7 +36,7 @@ void EventSource::open_stream(const std::string & filename) {
 
 //----------------------------------------------------------------------
 bool EventSource::append_next_event(std::vector<fastjet::PseudoJet> & particles,
-      double &event_weight, int vertex_number)
+      double &event_weight, int vertex_number, bool _recycle)
 {
    if(Type == FileType::Pu14)
       return append_next_event_pu14(particles, event_weight, vertex_number);
@@ -45,7 +45,7 @@ bool EventSource::append_next_event(std::vector<fastjet::PseudoJet> & particles,
    else if(Type == FileType::HepMC3)
       return append_next_event_hepmc3(particles, event_weight, vertex_number);
     else if(Type == FileType::ROOT)
-      return append_next_event_ROOT(particles, event_weight, vertex_number);
+      return append_next_event_ROOT(particles, event_weight, vertex_number,_recycle);
 
    std::cerr << "Error!  File type not found!" << std::endl;
 
@@ -110,16 +110,24 @@ bool EventSource::append_next_event_pu14(std::vector<fastjet::PseudoJet> & parti
 
 //----------------------------------------------------------------------
 bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & particles,
-    double &event_weight, int vertex_number)
+    double &event_weight, int vertex_number, bool _recycle)
 {
     unsigned original_size = particles.size();
     event_weight = 1;
 
     if (event_number >= events_in_tree){
-        std::cout << "No more events in the tree" << std::endl;
-        f->Close();
-        return (particles.size() != original_size);
+        if (_recycle == true) {
+            std::cout << "Recyling events" << std::endl;
+            event_number = 0;
+        }
+        else { // not Recycling so no more events
+            std::cout << "No more events in the tree" << std::endl;
+            f->Close();
+           return (particles.size() != original_size);
+        }
     }
+
+    std::cout << "vertex, event number: " << vertex_number << " " << event_number << std::endl;
 
     double pt, eta, phi;
     double mass = 0.139; // pion mass
@@ -142,7 +150,9 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
     event_number = event_number + 1;
 
     // if there were no new particles, then we assume the event has an error
-    return (particles.size() != original_size);
+    //return (particles.size() != original_size);
+
+    return (1);
 }
 
 //----------------------------------------------------------------------

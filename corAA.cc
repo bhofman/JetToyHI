@@ -10,7 +10,6 @@
 #include "PU14/PU14.hh"
 #include "include/extraInfo.hh"
 #include "include/jetCollection.hh"
-#include "include/softDropGroomer.hh"
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
 #include "include/Angularity.hh"
@@ -38,7 +37,7 @@ int main (int argc, char ** argv) {
   treeWriter trw("jetTree");
 
   //Jet definition
-  double R                   = 0.4;
+  double R                   = 0.2;
   double ghostRapMax         = 6.0;
   double ghost_area          = 0.005;
   int    active_area_repeats = 1;     
@@ -46,17 +45,14 @@ int main (int argc, char ** argv) {
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
 
-  double jetRapMax = 0.5;
+  double jetRapMax = 0.7;
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
-  Angularity Angularity_z1_theta1(1.0,1.,R);
-  Angularity Angularity_z1_theta2(2.0,1.,R);
-  Angularity Angularity_z2_theta1(1.0,2.,R);
-  Angularity Angularity_z2_theta2(2.0,2.,R);
+  Angularity Angularity_z1_theta2(2.0,1.0,R);
   
   ProgressBar Bar(cout, nEvent);
-  Bar.SetStyle((nEvent == -1 ? 7 : -1));
+  Bar.SetStyle((nEvent == -1 ? 8 : -1));
 
   EventMixer mixer(&cmdline);  //the mixing machinery from PU14 workshop
 
@@ -77,66 +73,41 @@ int main (int argc, char ** argv) {
     eventWeight.push_back(mixer.hard_weight());
     eventWeight.push_back(mixer.pu_weight());
 
-    fastjet::Selector sig_selector = SelectorVertexNumber(0);
-    vector<PseudoJet> particlesSig = sig_selector(particlesMergedAll);
-
-    fastjet::Selector bkg_selector = SelectorVertexNumber(1);
-    vector<PseudoJet> particlesBkg = bkg_selector(particlesMergedAll);
-
-    vector<PseudoJet> particlesMerged = particlesBkg;
-    particlesMerged.insert( particlesMerged.end(), particlesSig.begin(), particlesSig.end() );
-
     //---------------------------------------------------------------------------
     //   background subtraction FULL EVENT ITERATIVE
     //---------------------------------------------------------------------------
     //We want to substract for full event instead:
-    csSubFullEventIterative csSubFull( {2.,2.} , {.2,0.05}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
-    csSubFull.setInputParticles(particlesMerged);
-    csSubFull.setMaxEta(3.);
-    fastjet::ClusterSequenceArea fullSig(csSubFull.doSubtractionFullEvent(), jet_def, area_def);
-    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(user_pt)))); 
+    csSubFullEventIterative csSubFull( {0.0} , {0.1}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFull.setInputParticles(particlesMergedAll);
+    csSubFull.setMaxEta(1.5);
+    fastjet::ClusterSequenceArea fullSig(csSubFull.Subtract(), jet_def, area_def);
+    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(10.)))); 
+
+    vector<double> TrackOver100GeV;      TrackOver100GeV.reserve(jetCollectionCS_Sig.getJet().size());
+    double found;
+    for(fastjet::PseudoJet jet : jetCollectionCS_Sig.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+
+    if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        TrackOver100GeV.push_back(found);
+      }
+    } 
+    jetCollectionCS_Sig.addVector("TrackOver100GeV", TrackOver100GeV);  
 
     //calculate some angularities
-    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionCS_Sig.getJet().size());
     vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionCS_Sig.getJet().size());
-    vector<double> z2_theta1;      z2_theta1.reserve(jetCollectionCS_Sig.getJet().size());
-    vector<double> z2_theta2;      z2_theta2.reserve(jetCollectionCS_Sig.getJet().size());
-
     //need to get list of constituents of groomed jets
     for(PseudoJet jet : jetCollectionCS_Sig.getJet()) {
-      z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
-      z2_theta1.push_back(Angularity_z2_theta1.result(jet));
-      z2_theta2.push_back(Angularity_z2_theta2.result(jet));
     }
-
-    jetCollectionCS_Sig.addVector("z1_theta1", z1_theta1);
     jetCollectionCS_Sig.addVector("z1_theta2", z1_theta2);
-    jetCollectionCS_Sig.addVector("z2_theta1", z2_theta1);
-    jetCollectionCS_Sig.addVector("z2_theta2", z2_theta2);
 
-    //---------------------------------------------------------------------------
-    //   CS test statistics
-    //---------------------------------------------------------------------------
-    //Background densities used by constituent subtraction
-    std::vector<double> rhoFull;
-    std::vector<double> rhomFull;
-    rhoFull.push_back(csSubFull.getRho());  
-    rhomFull.push_back(csSubFull.getRhoM()); 
-
-    trw.addCollection("csFullRho",         rhoFull);
-    trw.addCollection("csFullRhom",        rhomFull);
-    
-    //---------------------------------------------------------------------------
-    //   SOFTDROP Groom the CS jets
-    //---------------------------------------------------------------------------
-    //SoftDrop grooming classic for signal jets (zcut=0.1, beta=0)
-    softDropGroomer sdgSigBeta00Z01(0.1, 0.0, R);
-    jetCollection jetCollectionCS_SD(sdgSigBeta00Z01.doGrooming(jetCollectionCS_Sig));
-
-    jetCollectionCS_SD.addVector("SD_zg",    sdgSigBeta00Z01.getZgs());
-    jetCollectionCS_SD.addVector("SD_ndrop", sdgSigBeta00Z01.getNDroppedSubjets());
-    jetCollectionCS_SD.addVector("SD_dr12",  sdgSigBeta00Z01.getDR12());
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
@@ -145,7 +116,6 @@ int main (int argc, char ** argv) {
 
     trw.addCollection("eventWeight",   eventWeight);
     trw.addCollection("",     jetCollectionCS_Sig);
-    trw.addCollection("SD_",      jetCollectionCS_SD);
     
     trw.fillTree();
 

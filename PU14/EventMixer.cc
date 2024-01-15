@@ -50,14 +50,14 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
   }
 
   _hard  .reset(new EventSource(_hard_name  , _hard_type , _hard_varname , _hard_treename));
-  _hard->Recycle = false;
+  //_hard->Recycle = false;
 
   if (_reco_name.empty()){
     cerr << "INFO: no detector level requested" << endl;
     _reco.reset();
   } else {
     _reco.reset(new EventSource(_reco_name, _reco_type , _reco_varname , _reco_treename));
-    _reco->Recycle = false;
+    //_reco->Recycle = false;
   }
 
   if (_pileup_name.empty()){
@@ -65,8 +65,8 @@ EventMixer::EventMixer(CmdLine * cmdline) : _cmdline(cmdline) {
     _pileup.reset();
     _npu=0;
   } else {
-    _pileup.reset(new EventSource(_pileup_name, _pileup_type , _pileup_varname , _pileup_treename));
-    _pileup->Recycle = true;
+    _pileup.reset(new EventSource(_pileup_name, _pileup_type , _pileup_varname , _pileup_treename, true));
+    //_pileup->Recycle = true;
   }
 }
 
@@ -90,7 +90,7 @@ bool EventMixer::next_event() {
   // add pileup if available
   if (_pileup.get()){
     for (int i = 1; i <= _npu; i++) {
-      if (! _pileup->append_next_event(_particles,_pu_event_weight,i)) std::cout << "Empty pileup event" << std::endl; //return false;
+      if (! _pileup->append_next_event(_particles,_pu_event_weight,i,true)) std::cout << "Empty pileup event" << std::endl; //return false;
     }
   }
 

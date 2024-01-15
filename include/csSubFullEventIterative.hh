@@ -9,8 +9,9 @@
 
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/ClusterSequenceArea.hh"
-
 #include "fastjet/contrib/IterativeConstituentSubtractor.hh"
+
+#include "fastjet/tools/GridMedianBackgroundEstimator.hh"
 
 using namespace std;
 using namespace fastjet;
@@ -33,7 +34,7 @@ private:
 	double max_eta_;
 
 	std::vector<fastjet::PseudoJet> fjInputs_;
-	contrib::IterativeConstituentSubtractor subtractor_;
+	fastjet::contrib::IterativeConstituentSubtractor subtractor_;
 
 public:
 	csSubFullEventIterative(vector<double> alpha = {0.,0.,0.}, vector<double> rParam = {0.1,0.1,.1},  double ghostArea = 0.005,	double ghostRapMax = 3.0) :
@@ -45,10 +46,10 @@ public:
 		rhom_(-1)
 	{
 		subtractor_.set_distance_type(contrib::ConstituentSubtractor::deltaR);
+        subtractor_.set_parameters(rParam_,alpha_);
 		subtractor_.set_ghost_removal(true);
+        subtractor_.set_ghost_area(ghostArea_);
 		subtractor_.set_scale_fourmomentum();
-		subtractor_.set_parameters(rParam_,alpha_);
-		subtractor_.set_ghost_area(ghostArea_);
 	}
 
 	void setAlpha(vector<double> a)     { alpha_ = a; }
@@ -66,20 +67,21 @@ public:
 	void setMaxEta(double max_eta)     	{ max_eta_ = max_eta; subtractor_.set_max_eta(max_eta); }
 
 	void setBackgroundGrid() { // Set the background rho using a grid instead of jets
-		subtractor_.initialize();
-
-		GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
-		
-		bge_rho.set_particles(fjInputs_);  
+        GridMedianBackgroundEstimator bge_rho(max_eta_,0.5); 
+        bge_rho.set_particles(fjInputs_);  
 		subtractor_.set_background_estimator(&bge_rho); 
+
 		rho_ = bge_rho.rho();
 		rhom_ = bge_rho.rho_m();
+
+        subtractor_.set_background_estimator(&bge_rho);
+        subtractor_.set_common_bge_for_rho_and_rhom(true);
+
+        subtractor_.initialize(); 
 	}
 
-	void setBackground() {
-		subtractor_.initialize();
-
-		AreaDefinition area_def_bkgd(active_area_explicit_ghosts, GhostedAreaSpec(5.)); // Ghost rho should go atleasy 2R beyond jet region
+	/*void setBackground() {
+		AreaDefinition area_def_bkgd(active_area_explicit_ghosts, GhostedAreaSpec(5.));
 		JetDefinition jet_def_bkgd(kt_algorithm, 0.4);
    		Selector selector = SelectorAbsRapMax(3.) * (!SelectorNHardest(2));
 		JetMedianBackgroundEstimator bge_rho(selector, jet_def_bkgd, area_def_bkgd);
@@ -91,13 +93,36 @@ public:
 
 		subtractor_.set_background_estimator(&bge_rho);
 		subtractor_.set_common_bge_for_rho_and_rhom(true);
-	}
+
+        subtractor_.initialize();
+	}*/
 
 	std::vector<fastjet::PseudoJet> doSubtractionFullEvent() {
-		//cout << subtractor_.description() << endl;
+        cout << subtractor_.description() << endl;
 
 		if(rho_<0.) {  cout << "Rho < 0 " << endl ; }
-		//cout << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
+		cout << endl << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
+
+		std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
+		return corrected_event;
+  	}
+    
+    std::vector<fastjet::PseudoJet> Subtract() {
+        GridMedianBackgroundEstimator bge_rho(max_eta_,0.5);
+        bge_rho.set_particles(fjInputs_);  
+		subtractor_.set_background_estimator(&bge_rho); 
+
+		rho_ = bge_rho.rho();
+		rhom_ = bge_rho.rho_m();
+		if(rho_<0.) {
+            cout << "Rho < 0 " << endl ; 
+		    cout << endl << "rho_: "<<rho_<<" rhom_: "<<rhom_<<endl;
+        }
+
+        subtractor_.set_background_estimator(&bge_rho);
+        subtractor_.set_common_bge_for_rho_and_rhom(true);
+        subtractor_.initialize();
+        //cout << subtractor_.description() << endl; 
 
 		std::vector<fastjet::PseudoJet> corrected_event = subtractor_.subtract_event(fjInputs_);
 		return corrected_event;

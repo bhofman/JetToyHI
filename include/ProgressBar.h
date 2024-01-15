@@ -84,7 +84,7 @@ void ProgressBar::SanityCheck()
       Column = 100;
    }
 
-   if(Style < 0 || Style > 7)
+   if(Style < 0 || Style > 8)
    {
       std::cerr << "[ProgressBar] Style invalid.  Set to a random style." << std::endl;
       std::cerr << std::endl;
@@ -232,10 +232,8 @@ void ProgressBar::Print(double progress)
    }
    if(Style == 7)
       *Out << "\033[1GCurrent progress: " << progress - Min << std::flush;
+   if(Style == 8)
+   {
+      if (((int)(progress - Min))%1000==0) *Out << "\033[1GCurrent progress: " << progress - Min << std::flush;
+   }  
 }
-
-
-
-
-
-

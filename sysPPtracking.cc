@@ -50,10 +50,7 @@ int main (int argc, char ** argv) {
   Selector jet_selector = SelectorAbsRapMax(jetRapMax);
   //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
-  Angularity Angularity_z1_theta1(1.0,1.,R);
   Angularity Angularity_z1_theta2(2.0,1.,R);
-  Angularity Angularity_z2_theta1(1.0,2.,R);
-  Angularity Angularity_z2_theta2(2.0,2.,R);
 
   ProgressBar Bar(cout, nEvent);
   Bar.SetStyle((nEvent == -1 ? 7 : -1));
