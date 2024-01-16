@@ -127,8 +127,6 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
         }
     }
 
-    std::cout << "vertex, event number: " << vertex_number << " " << event_number << std::endl;
-
     double pt, eta, phi;
     double mass = 0.139; // pion mass
 
