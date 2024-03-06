@@ -114,6 +114,7 @@ int main (int argc, char ** argv) {
     }
     jetCollectionTruth.addVector("Truth_z1_theta2", z1_theta2_truth);
     trw.addCollection("Truth_",     jetCollectionTruth);
+
     //---------------------------------------------------------------------------
     //   Detector level jets before any matching
     //---------------------------------------------------------------------------
@@ -147,7 +148,6 @@ int main (int argc, char ** argv) {
       }
     }
     jetCollectionDetector.addVector("Detector_z1_theta2", z1_theta2_detector);
-
     trw.addCollection("Detector_",     jetCollectionDetector);
     
     //---------------------------------------------------------------------------
@@ -181,52 +181,7 @@ int main (int argc, char ** argv) {
       Embedded_z1_theta2.push_back(Angularity_z1_theta2.result(jet));
     }
     jetCollectionEmbedded.addVector("Embedded_z1_theta2", Embedded_z1_theta2);
-
     trw.addCollection("Embedded_",     jetCollectionEmbedded);
-
-    //---------------------------------------------------------------------------
-    //   Matching of detector jets to truth jets
-    //---------------------------------------------------------------------------
-    //match CSFull jets to signal jets
-    jetMatcher jmTruth(0.6*R);
-    jmTruth.setBaseJets(jetCollectionTruth);
-    jmTruth.setTagJets(jetCollectionDetector);
-    jmTruth.matchJets();
-    jmTruth.reorderedToBase(jetCollectionDetector);
-    
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> MatchedEventDetector;
-    for(fastjet::PseudoJet jet : jetCollectionDetector.getJet()) {
-      if(jet.has_constituents()){
-        MatchedEventDetector.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionDetectorMatched(MatchedEventDetector);
-
-    // 100 GeV track finder
-    vector<double> Detector_Matched_TrackOver100GeV;
-    Detector_Matched_TrackOver100GeV.reserve(jetCollectionDetectorMatched.getJet().size());
-    for(fastjet::PseudoJet jet : jetCollectionDetectorMatched.getJet()) {
-      if(jet.has_constituents()) {
-        found = 0;
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-            if (constituent.perp() > 100.) {
-                found = constituent.perp();
-                break;
-            }
-        }
-        Detector_Matched_TrackOver100GeV.push_back(found);
-      }
-    } 
-    jetCollectionDetectorMatched.addVector("Detector_Matched_TrackOver100GeV", Detector_Matched_TrackOver100GeV); 
-        
-    vector<double> z1_theta2_detector_matched;      z1_theta2_detector_matched.reserve(jetCollectionDetectorMatched.getJet().size()); 
-    for(PseudoJet jet : jetCollectionDetectorMatched.getJet()) {
-        z1_theta2_detector_matched.push_back(Angularity_z1_theta2.result(jet));
-    }
-    jetCollectionDetectorMatched.addVector("Detector_Matched_z1_theta2", z1_theta2_detector_matched);
-    
-    trw.addCollection("Detector_Matched_",     jetCollectionDetectorMatched);
 
     //---------------------------------------------------------------------------
     //   Matching of embedded jets to detector jets
@@ -271,7 +226,96 @@ int main (int argc, char ** argv) {
     jetCollectionEmbeddedMatched.addVector("Embedded_Matched_z1_theta2", z1_theta2_embedded_matched);
     
     trw.addCollection("Embedded_Matched_",     jetCollectionEmbeddedMatched);
+
+
+    //---------------------------------------------------------------------------
+    //   Matching of detector jets to truth jets
+    //---------------------------------------------------------------------------
+    //match CSFull jets to signal jets
+    jetMatcher jmTruth(0.6*R);
+    jmTruth.setBaseJets(jetCollectionTruth);
+    jmTruth.setTagJets(jetCollectionDetector);
+    jmTruth.matchJets();
+    jmTruth.reorderedToBase(jetCollectionDetector);
     
+    // Make sure our groomed jets have constituents
+    std::vector<fastjet::PseudoJet> MatchedEventDetector;
+    for(fastjet::PseudoJet jet : jetCollectionDetector.getJet()) {
+      if(jet.has_constituents()){
+        MatchedEventDetector.push_back(jet);
+      }
+    }
+    jetCollection jetCollectionDetectorMatched(MatchedEventDetector);
+
+    // 100 GeV track finder
+    vector<double> Detector_Matched_TrackOver100GeV;
+    Detector_Matched_TrackOver100GeV.reserve(jetCollectionDetectorMatched.getJet().size());
+    for(fastjet::PseudoJet jet : jetCollectionDetectorMatched.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        Detector_Matched_TrackOver100GeV.push_back(found);
+      }
+    } 
+    jetCollectionDetectorMatched.addVector("Detector_Matched_TrackOver100GeV", Detector_Matched_TrackOver100GeV); 
+        
+    vector<double> z1_theta2_detector_matched;      z1_theta2_detector_matched.reserve(jetCollectionDetectorMatched.getJet().size()); 
+    for(PseudoJet jet : jetCollectionDetectorMatched.getJet()) {
+        z1_theta2_detector_matched.push_back(Angularity_z1_theta2.result(jet));
+    }
+    jetCollectionDetectorMatched.addVector("Detector_Matched_z1_theta2", z1_theta2_detector_matched);
+    
+    trw.addCollection("Detector_Matched_",     jetCollectionDetectorMatched);
+    
+    //---------------------------------------------------------------------------
+    //   Matching of embedded jets to detector jets
+    //---------------------------------------------------------------------------
+    //match CSFull jets to signal jets
+    jetMatcher jmEmbedded(0.6*R);
+    jmEmbedded.setBaseJets(jetCollectionTruth);
+    jmEmbedded.setTagJets(jetCollectionEmbedded);
+    jmEmbedded.matchJets();
+    jmEmbedded.reorderedToBase(jetCollectionEmbedded);
+    
+    // Make sure our groomed jets have constituents
+    std::vector<fastjet::PseudoJet> MatchedEventEmbeddedToTruth;
+    for(fastjet::PseudoJet jet : jetCollectionEmbedded.getJet()) {
+      if(jet.has_constituents()){
+        MatchedEventEmbeddedToTruth.push_back(jet);
+      }
+    }
+    jetCollection jetCollectionEmbeddedMatchedToTruth(MatchedEventEmbeddedToTruth);
+
+    // 100 GeV track finder
+    vector<double> Embedded_Matched_TrackOver100GeV;
+    Embedded_Matched_TrackOver100GeV.reserve(jetCollectionEmbeddedMatchedToTruth.getJet().size());
+    for(fastjet::PseudoJet jet : jetCollectionEmbeddedMatchedToTruth.getJet()) {
+      if(jet.has_constituents()) {
+        found = 0;
+        for(fastjet::PseudoJet constituent : jet.constituents()) {
+            if (constituent.perp() > 100.) {
+                found = constituent.perp();
+                break;
+            }
+        }
+        Embedded_Matched_TrackOver100GeV.push_back(found);
+      }
+    } 
+    jetCollectionEmbeddedMatchedToTruth.addVector("Embedded_Matched_TrackOver100GeV", Embedded_Matched_TrackOver100GeV); 
+    
+    vector<double> z1_theta2_embedded_matched;      z1_theta2_embedded_matched.reserve(jetCollectionEmbeddedMatchedToTruth.getJet().size()); 
+    for(PseudoJet jet : jetCollectionEmbeddedMatchedToTruth.getJet()) {
+        z1_theta2_embedded_matched.push_back(Angularity_z1_theta2.result(jet));
+    }
+    jetCollectionEmbeddedMatchedToTruth.addVector("Embedded_Matched_ToTruth_z1_theta2", z1_theta2_embedded_matched);
+    
+    trw.addCollection("Embedded_Matched_ToTruth_",     jetCollectionEmbeddedMatchedToTruth);
+
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
