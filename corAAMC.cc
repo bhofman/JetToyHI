@@ -184,51 +184,6 @@ int main (int argc, char ** argv) {
     trw.addCollection("Embedded_",     jetCollectionEmbedded);
 
     //---------------------------------------------------------------------------
-    //   Matching of embedded jets to detector jets
-    //---------------------------------------------------------------------------
-    //match CSFull jets to signal jets
-    jetMatcher jmEmbedded(0.6*R);
-    jmEmbedded.setBaseJets(jetCollectionDetector);
-    jmEmbedded.setTagJets(jetCollectionEmbedded);
-    jmEmbedded.matchJets();
-    jmEmbedded.reorderedToBase(jetCollectionEmbedded);
-    
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> MatchedEventEmbedded;
-    for(fastjet::PseudoJet jet : jetCollectionEmbedded.getJet()) {
-      if(jet.has_constituents()){
-        MatchedEventEmbedded.push_back(jet);
-      }
-    }
-    jetCollection jetCollectionEmbeddedMatched(MatchedEventEmbedded);
-
-    // 100 GeV track finder
-    vector<double> Embedded_Matched_TrackOver100GeV;
-    Embedded_Matched_TrackOver100GeV.reserve(jetCollectionEmbeddedMatched.getJet().size());
-    for(fastjet::PseudoJet jet : jetCollectionEmbeddedMatched.getJet()) {
-      if(jet.has_constituents()) {
-        found = 0;
-        for(fastjet::PseudoJet constituent : jet.constituents()) {
-            if (constituent.perp() > 100.) {
-                found = constituent.perp();
-                break;
-            }
-        }
-        Embedded_Matched_TrackOver100GeV.push_back(found);
-      }
-    } 
-    jetCollectionEmbeddedMatched.addVector("Embedded_Matched_TrackOver100GeV", Embedded_Matched_TrackOver100GeV); 
-    
-    vector<double> z1_theta2_embedded_matched;      z1_theta2_embedded_matched.reserve(jetCollectionEmbeddedMatched.getJet().size()); 
-    for(PseudoJet jet : jetCollectionEmbeddedMatched.getJet()) {
-        z1_theta2_embedded_matched.push_back(Angularity_z1_theta2.result(jet));
-    }
-    jetCollectionEmbeddedMatched.addVector("Embedded_Matched_z1_theta2", z1_theta2_embedded_matched);
-    
-    trw.addCollection("Embedded_Matched_",     jetCollectionEmbeddedMatched);
-
-
-    //---------------------------------------------------------------------------
     //   Matching of detector jets to truth jets
     //---------------------------------------------------------------------------
     //match CSFull jets to signal jets
@@ -271,30 +226,30 @@ int main (int argc, char ** argv) {
     jetCollectionDetectorMatched.addVector("Detector_Matched_z1_theta2", z1_theta2_detector_matched);
     
     trw.addCollection("Detector_Matched_",     jetCollectionDetectorMatched);
-    
+
     //---------------------------------------------------------------------------
-    //   Matching of embedded jets to detector jets
+    //   Matching of embedded jets to matched detector jets
     //---------------------------------------------------------------------------
     //match CSFull jets to signal jets
     jetMatcher jmEmbedded(0.6*R);
-    jmEmbedded.setBaseJets(jetCollectionTruth);
+    jmEmbedded.setBaseJets(jetCollectionDetectorMatched);
     jmEmbedded.setTagJets(jetCollectionEmbedded);
     jmEmbedded.matchJets();
     jmEmbedded.reorderedToBase(jetCollectionEmbedded);
     
     // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> MatchedEventEmbeddedToTruth;
+    std::vector<fastjet::PseudoJet> MatchedEventEmbedded;
     for(fastjet::PseudoJet jet : jetCollectionEmbedded.getJet()) {
       if(jet.has_constituents()){
-        MatchedEventEmbeddedToTruth.push_back(jet);
+        MatchedEventEmbedded.push_back(jet);
       }
     }
-    jetCollection jetCollectionEmbeddedMatchedToTruth(MatchedEventEmbeddedToTruth);
+    jetCollection jetCollectionEmbeddedMatched(MatchedEventEmbedded);
 
     // 100 GeV track finder
     vector<double> Embedded_Matched_TrackOver100GeV;
-    Embedded_Matched_TrackOver100GeV.reserve(jetCollectionEmbeddedMatchedToTruth.getJet().size());
-    for(fastjet::PseudoJet jet : jetCollectionEmbeddedMatchedToTruth.getJet()) {
+    Embedded_Matched_TrackOver100GeV.reserve(jetCollectionEmbeddedMatched.getJet().size());
+    for(fastjet::PseudoJet jet : jetCollectionEmbeddedMatched.getJet()) {
       if(jet.has_constituents()) {
         found = 0;
         for(fastjet::PseudoJet constituent : jet.constituents()) {
@@ -306,15 +261,15 @@ int main (int argc, char ** argv) {
         Embedded_Matched_TrackOver100GeV.push_back(found);
       }
     } 
-    jetCollectionEmbeddedMatchedToTruth.addVector("Embedded_Matched_TrackOver100GeV", Embedded_Matched_TrackOver100GeV); 
+    jetCollectionEmbeddedMatched.addVector("Embedded_Matched_TrackOver100GeV", Embedded_Matched_TrackOver100GeV); 
     
-    vector<double> z1_theta2_embedded_matched;      z1_theta2_embedded_matched.reserve(jetCollectionEmbeddedMatchedToTruth.getJet().size()); 
-    for(PseudoJet jet : jetCollectionEmbeddedMatchedToTruth.getJet()) {
+    vector<double> z1_theta2_embedded_matched;      z1_theta2_embedded_matched.reserve(jetCollectionEmbeddedMatched.getJet().size()); 
+    for(PseudoJet jet : jetCollectionEmbeddedMatched.getJet()) {
         z1_theta2_embedded_matched.push_back(Angularity_z1_theta2.result(jet));
     }
-    jetCollectionEmbeddedMatchedToTruth.addVector("Embedded_Matched_ToTruth_z1_theta2", z1_theta2_embedded_matched);
+    jetCollectionEmbeddedMatched.addVector("Embedded_Matched_z1_theta2", z1_theta2_embedded_matched);
     
-    trw.addCollection("Embedded_Matched_ToTruth_",     jetCollectionEmbeddedMatchedToTruth);
+    trw.addCollection("Embedded_Matched_",     jetCollectionEmbeddedMatched);
 
     //---------------------------------------------------------------------------
     //   write tree
