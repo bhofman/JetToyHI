@@ -11,12 +11,12 @@ FFLAGS = -Wall -O2
 CXXFLAGS += -std=c++11
 LDFLAGS += -std=c++11
 
-FJCONFIG = /soft/fastjet-3.3.3/../fastjet333-install/bin/fastjet-config
-FJLOC = /soft/fastjet-3.3.3/../fastjet333-install
+FJCONFIG = /user/bashof/soft/fastjet-3.3.3/../fastjet333-install/bin/fastjet-config
+FJLOC = /user/bashof/soft/fastjet-3.3.3/../fastjet333-install
 
 INCLUDE += `$(FJCONFIG) --cxxflags`
 LIBRARIES  += -L$(FJLOC)/lib -lRecursiveTools `$(FJCONFIG) --libs --plugins` -lfastjetcontribfragile
-LIBRARIES += -L/usr/lib/x86_64-linux-gnu -lgsl -lgslcblas -lm
+LIBRARIES += -lgsl -lgslcblas -lm
 
 INCLUDE += -I/usr/include
 

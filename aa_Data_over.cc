@@ -10,12 +10,11 @@
 #include "PU14/PU14.hh"
 #include "include/extraInfo.hh"
 #include "include/jetCollection.hh"
-#include "include/softDropGroomer.hh"
 #include "include/treeWriter.hh"
 #include "include/jetMatcher.hh"
 #include "include/Angularity.hh"
-
-#include "include/AliceFastSim.hh"
+#include "include/csSubFullEventIterative.hh"
+#include "include/softDropGroomer.hh"
 
 using namespace std;
 using namespace fastjet;
@@ -29,8 +28,7 @@ int main (int argc, char ** argv) {
   int nEvent = cmdline.value<int>("-nev",1);
   cout << "will run on " << nEvent << " events" << endl;
 
-  TFile *fout = new TFile(cmdline.value<string>("-output", "PPMC.root").c_str(), "RECREATE");
-  int user_pt = cmdline.value<int>("-pt",1); 
+  TFile *fout = new TFile(cmdline.value<string>("-output", "test.root").c_str(), "RECREATE");
 
   // Uncomment to silence fastjet banner
   ClusterSequence::set_fastjet_banner_stream(NULL);
@@ -47,21 +45,16 @@ int main (int argc, char ** argv) {
   AreaDefinition area_def = AreaDefinition(active_area,ghost_spec);
   JetDefinition jet_def(antikt_algorithm, R);
 
-  double jetRapMax = 1.5;
-  Selector jet_selector = SelectorAbsRapMax(jetRapMax);
-  //Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
+  double jetRapMax = 1.0;
+  Selector jet_selector = SelectorAbsEtaMax(jetRapMax);
 
   Angularity Angularity_z1_theta1(1.0,1.,R);
   Angularity Angularity_z1_theta2(2.0,1.,R);
-  Angularity Angularity_z2_theta1(1.0,2.,R);
-  Angularity Angularity_z2_theta2(2.0,2.,R);
-
+  
   ProgressBar Bar(cout, nEvent);
-  Bar.SetStyle((nEvent == -1 ? 7 : -1));
+  Bar.SetStyle((nEvent == -1 ? 8 : -1));
 
   EventMixer mixer(&cmdline);  //the mixing machinery from PU14 workshop
-
-  AliceFastSim fastSim = AliceFastSim();
 
   // loop over events
   int iev = 0;
@@ -70,7 +63,7 @@ int main (int argc, char ** argv) {
   {
     // increment event number    
     iev++;
-
+       
     Bar.Update(iev);
     Bar.PrintWithMod(entryDiv);
 
@@ -78,30 +71,26 @@ int main (int argc, char ** argv) {
 
     vector<double> eventWeight;
     eventWeight.push_back(mixer.hard_weight());
+    eventWeight.push_back(mixer.pu_weight());
 
-    vector<PseudoJet> particlesSig = mixer.particles();
+    //---------------------------------------------------------------------------
+    //   background subtraction FULL EVENT ITERATIVE
+    //---------------------------------------------------------------------------
+    //We want to substract for full event instead:
+    csSubFullEventIterative csSubFull( {0.0} , {0.2}, 0.005,ghostRapMax);  // alpha, rParam, ghA, ghRapMax
+    csSubFull.setInputParticles(particlesMergedAll);
+    csSubFull.setMaxEta(1.5);
+    fastjet::ClusterSequenceArea fullSig(csSubFull.Subtract(), jet_def, area_def);
+    jetCollection jetCollectionCS_Sig(sorted_by_pt(jet_selector(fullSig.inclusive_jets(20.)))); 
 
-    //---------------------------------------------------------------------------
-    //   fastsim
-    //---------------------------------------------------------------------------
-    fastSim.setInputEvent(particlesSig);
-    vector<PseudoJet> particlesTruth = fastSim.AliceAcceptance();
-    vector<PseudoJet> particlesDetector = fastSim.AliceDetector();
-    
-    //---------------------------------------------------------------------------
-    //   jet clustering of Detector jets
-    //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea csDetector(particlesDetector, jet_def, area_def);
-    jetCollection jetCollectionDetector(sorted_by_pt(jet_selector(csDetector.inclusive_jets(10.)))); // Inclusive jets to take a jets with pt over (pt_min)
-
-    vector<double> TrackOver100GeV;      TrackOver100GeV.reserve(jetCollectionDetector.getJet().size());
+    vector<double> TrackOver100GeV;      TrackOver100GeV.reserve(jetCollectionCS_Sig.getJet().size());
     double found;
-
-    for(fastjet::PseudoJet jet : jetCollectionDetector.getJet()) {
+    for(fastjet::PseudoJet jet : jetCollectionCS_Sig.getJet()) {
       if(jet.has_constituents()) {
         found = 0;
         for(fastjet::PseudoJet constituent : jet.constituents()) {
-            if (constituent.perp() > 100.) {
+
+    if (constituent.perp() > 100.) {
                 found = constituent.perp();
                 break;
             }
@@ -109,68 +98,40 @@ int main (int argc, char ** argv) {
         TrackOver100GeV.push_back(found);
       }
     } 
-
-    jetCollectionDetector.addVector("TrackOver100GeV", TrackOver100GeV);
+    jetCollectionCS_Sig.addVector("TrackOver100GeV", TrackOver100GeV);  
 
     //calculate some angularities
-    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionDetector.getJet().size()); 
-
+    vector<double> z1_theta1;      z1_theta1.reserve(jetCollectionCS_Sig.getJet().size()); 
+    vector<double> z1_theta2;      z1_theta2.reserve(jetCollectionCS_Sig.getJet().size()); 
+    
     //need to get list of constituents of groomed jets
-    for(PseudoJet jet : jetCollectionDetector.getJet()) {
+    for(PseudoJet jet : jetCollectionCS_Sig.getJet()) {
+      z1_theta1.push_back(Angularity_z1_theta1.result(jet));
       z1_theta2.push_back(Angularity_z1_theta2.result(jet));
     }
 
-    jetCollectionDetector.addVector("Det_z1_theta2", z1_theta2);
+    jetCollectionCS_Sig.addVector("z1_theta1", z1_theta1);
+    jetCollectionCS_Sig.addVector("z1_theta2", z1_theta2);
 
+    trw.addCollection("",               jetCollectionCS_Sig);
     //---------------------------------------------------------------------------
-    //   jet clustering of Truth jets
+    //   SD Groom jets
     //---------------------------------------------------------------------------
-    fastjet::ClusterSequenceArea csTruth(particlesTruth, jet_def, area_def);
-    jetCollection jetCollectionTruth(sorted_by_pt(jet_selector(csTruth.inclusive_jets(10.)))); // Inclusive jets to take a jets with pt over (pt_min)
+    //SoftDrop grooming classic for signal jets (zcut=0.2, beta=0)
+    softDropGroomer SDGroomer(0.2, 0.0, R);
+    jetCollection jetCollectionSig_SD(SDGroomer.doGrooming(jetCollectionCS_Sig));
 
-    trw.addCollection("Truth_",      jetCollectionTruth);
+    jetCollectionSig_SD.addVector("SD_zg",    SDGroomer.getZgs());
+    jetCollectionSig_SD.addVector("SD_ndrop", SDGroomer.getNDroppedSubjets());
+    jetCollectionSig_SD.addVector("SD_dr12",  SDGroomer.getDR12());
 
-    //match truth jets to detector jets
-    jetMatcher jmCSFull(R);
-    jmCSFull.setBaseJets(jetCollectionTruth);
-    jmCSFull.setTagJets(jetCollectionDetector);
-    jmCSFull.matchJets();
-    jmCSFull.reorderedToTag(jetCollectionTruth);
-    /*
-    // Make sure our groomed jets have constituents
-    std::vector<fastjet::PseudoJet> MatchedEvent;
-    for(fastjet::PseudoJet jet : jetCollectionTruth.getJet()) {
-      if(jet.has_constituents()){
-        MatchedEvent.push_back(jet);
-      }
-    }
-    */
-    jetCollection jetCollectionTruthMatched(jetCollectionTruth);    
-
-    //calculate some angularities
-    vector<double> z1_theta2_truth;      z1_theta2_truth.reserve(jetCollectionTruthMatched.getJet().size()); 
-
-    //need to get list of constituents of groomed jets
-    for(PseudoJet jet : jetCollectionTruthMatched.getJet()) {
-      if (!jet.has_constituents()) {
-        z1_theta2_truth.push_back(0);
-      } else {
-        z1_theta2_truth.push_back(Angularity_z1_theta2.result(jet));
-      }
-    }
-
-    jetCollectionTruthMatched.addVector("Truth_z1_theta2", z1_theta2_truth);
-    
+    trw.addCollection("SD_",            jetCollectionSig_SD);    
     //---------------------------------------------------------------------------
     //   write tree
     //---------------------------------------------------------------------------
     //Give variable we want to write out to treeWriter.
     //Only vectors of the types 'jetCollection', and 'double', 'int', 'PseudoJet' are supported
-
     trw.addCollection("eventWeight",   eventWeight);
-    trw.addCollection("Det_",        jetCollectionDetector);
-    trw.addCollection("Truth_Matched_",        jetCollectionTruthMatched);
-    
     trw.fillTree();
 
   }//event loop
