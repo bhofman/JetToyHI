@@ -35,7 +35,7 @@ private :
   TF1              *funcThrm_;
 
 public :
-  thermalEvent(unsigned int mult = 12000, double meanpt = 0.7, double rapMin = -3., double rapMax = 3.,double neutralFrac = 0.33) :
+  thermalEvent(unsigned int mult = 12000, double meanpt = 0.7, double rapMin = -1., double rapMax = 1.,double neutralFrac = 0.33) :
     meanpt_(meanpt),
     mult_(mult),
     rapMin_(rapMin),
@@ -83,50 +83,6 @@ public :
     }
     return particles;
   }
-
-  std::vector<fastjet::PseudoJet> createThermalEventAlice() {
-
-    std::vector<fastjet::PseudoJet> particles;
-    
-    // Adapted from: https://github.com/ezradlesser/pyjetty/blob/28edacca74f7be4d7c22afd820d789ecfe8abe6d/pyjetty/alice_analysis/process/base/thermal_generator.py
-    double meanN = 2500.;
-    double sigmaN = 500.;
-    
-    std::random_device rd {};
-    std::mt19937 gen {rd()};
-    std::normal_distribution<> d {meanN, sigmaN}; // mean , sigma
-    
-    for(unsigned int i = 0; i<std::round(d(gen)); ++i) {
-      std::gamma_distribution<> d(2, 0.4);
-      double pt = d(gen);
-
-      //random phi
-      double phimin = 0.;
-      double phimax = TMath::TwoPi();
-      double phi = gRandom->Rndm() * (phimax - phimin) + phimin;
-      
-      //random rapidity
-      double rap = gRandom->Rndm() * 0.9;//(rapMax_ - rapMin_) + rapMin_;
-
-      int pdgid = 22;
-      double mass = 0.0;
-      //if(gRandom->Rndm()>neutralFrac_) {
-        mass = 0.1395;
-        int charge = 1;
-        if(gRandom->Rndm()<0.5) charge = -1;
-        pdgid = charge*211;
-      //}
-      //std::cout << "pt: " << pt << std::endl;
-      
-      fastjet::PseudoJet p4;
-      p4.reset_momentum_PtYPhiM(pt,rap,phi,mass);
-      p4.set_user_info(new extraInfo(pdgid, 1));
-      
-      particles.push_back(p4);
-    }
-    
-    return particles;
-  }  
 
 };
 

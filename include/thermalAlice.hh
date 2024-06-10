@@ -20,8 +20,8 @@ using namespace std;
 
 //---------------------------------------------------------------
 // Description
-// This class generates a thermal event following Boltzman distribution
-// Author: M. Verweij
+// This class generates a thermal event following Gamma distribution
+// Based on https://github.com/ezradlesser/pyjetty/blob/28edacca74f7be4d7c22afd820d789ecfe8abe6d/pyjetty/alice_analysis/process/base/thermal_generator.py
 //---------------------------------------------------------------
 
 class thermalAlice {
