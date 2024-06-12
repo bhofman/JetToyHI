@@ -35,15 +35,15 @@ public :
     
     funcThrm_ = new TF1("funcThrm_","TMath::Power(x, [0]-1)*TMath::Exp(-x/[1])", 0.15, 200.); // gamma function
     funcThrm_->SetParNames("alpha", "beta");
-    funcThrm_->SetParameters(2.,0.3675);
-    //funcThrm_->SetParameters(2.,0.4);
+    //funcThrm_->SetParameters(2.,0.3675);
+    funcThrm_->SetParameters(2.,0.4);
   }
   
   std::vector<fastjet::PseudoJet> createThermalEventAlice() {
 
     std::vector<fastjet::PseudoJet> particles;
 
-    double meanN = 2300.;
+    double meanN = 2500.;
     double sigmaN = 500.;
     std::random_device rd {};
     std::mt19937 gen {rd()};
