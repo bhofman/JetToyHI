@@ -11,9 +11,31 @@
 #include <fstream>
 #include <sstream>
 
+////////////////////////////// Some code to assign mass from PDG code
+#include "TDatabasePDG.h"
+#include "TParticlePDG.h"
+#include <iostream>
+#include <cmath>
+
+double getMassFromPDG(int pdg_id) {
+    // Use the absolute value to ignore particle vs. antiparticle
+    int abs_pdg_id = std::abs(pdg_id);
+
+    // Get the particle database singleton
+    TDatabasePDG* pdgDB = TDatabasePDG::Instance();
+
+    // Look up the particle
+    TParticlePDG* particle = pdgDB->GetParticle(abs_pdg_id);
+    if (particle) {
+        return particle->Mass(); // Mass is returned in GeV
+    } else {
+        std::cerr << "Unknown PDG ID: " << pdg_id << std::endl;
+        return -1.0;
+    }
+}
+
 using namespace std;
 using namespace fastjet;
-
 
 //----------------------------------------------------------------------
 void EventSource::open_stream(const std::string & filename) {
@@ -128,6 +150,7 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
     }
 
     double pt, eta, phi;
+    int PDG;
     double mass = 0.139; // pion mass
 
     tree->GetEntry(event_number);
@@ -136,6 +159,10 @@ bool EventSource::append_next_event_ROOT(std::vector<fastjet::PseudoJet> & parti
         pt  = abs(_pt->at(j));
         eta = _eta->at(j); //PSEUDO-rapidity
         phi = _phi->at(j);
+        if (_PDG) { 
+            PDG = _PDG->at(j);
+            mass = getMassFromPDG(PDG);
+        }
 
         double E = sqrt(pt*cos(phi)*pt*cos(phi)+pt*sin(phi)*pt*sin(phi)+pt*sinh(eta)*pt*sinh(eta)+mass*mass);
 
