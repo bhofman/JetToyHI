@@ -462,19 +462,22 @@ public:
     std::vector<double>* _pt  = 0;
     std::vector<double>* _eta = 0;
     std::vector<double>* _phi = 0;
+    std::vector<double>* _mass = 0;
 
-   EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename, bool _recycle = false)
+   EventSource(const std::string & filename, const std::string & type, const std::string & varname, const std::string & treename, bool _recycle = false, int _startEvent = 0)
    {
       Recycle = _recycle;
       if(type == "ROOT"){
         f = new TFile(filename.c_str(),"READ");
         tree = (TTree*)f->Get(treename.c_str());
         //tree->SetAutoFlush(0);
-        event_number = 0;
+        std::cout<< "Starting event number: " << _startEvent << std::endl;
+        event_number = _startEvent;
         tree->SetBranchAddress((varname+"_pt").c_str(), &_pt);
         tree->SetBranchAddress((varname+"_eta").c_str(), &_eta);
         tree->SetBranchAddress((varname+"_phi").c_str(), &_phi);
         events_in_tree = tree->GetEntries();
+
       }
       else
         open_stream(filename);
